@@ -53,8 +53,19 @@ sbt "it:test"
 
 To run all unit tests and then integration tests: `sbt ";test;it:test"`
 
+## Contributing
+
+If you have a change, please make sure that you open a pull request that makes everybody happy:
+- Format the code to use the same style as the rest of the code;
+- Have test coverage;
+- Give a good description, rationale, etcetera in your pull request.
+
+We will do our best to respond to any incoming pull requests as soon as possible. If you are
+not sure whether we will be inclined to merge your pull request, feel free to open an issue
+on GH and ask us beforehand.
+
 ## Release
- 
+
 Follow these steps to release a new version:
  - Update version.sbt in your PR
  - Update CHANGELOG.md in your PR
