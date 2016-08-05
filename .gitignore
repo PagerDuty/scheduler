@@ -1,0 +1,34 @@
+project/local-overrides.properties
+*/project/local-overrides.properties
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+log/
+dist/
+/tmp/
+/.metadata/
+/.idea/
+.project
+# Emacs backup files
+*~
+# Emacs file locks
+.#*
+# Vim swap files
+.*.swp
+# Ensime project file
+.ensime
+/mercury.iml
+/.classpath
+/project/project.iml
+tags
+.idea_modules/*
+.cache
+bin
+.DS_Store
+.externalToolBuilders/
+.settings/
+.bundle
+*.iml
+src/main/resources/logback.xml

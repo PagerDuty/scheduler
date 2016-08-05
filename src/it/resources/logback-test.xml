@@ -1,0 +1,15 @@
+<configuration>
+
+  <appender name="testlog" class="ch.qos.logback.core.FileAppender">
+    <file>target/integration-test.log</file>
+    <encoder>
+      <pattern>%d %-5level [%thread] %logger{0}: %msg%n</pattern>
+      <!-- this quadruples logging throughput -->
+      <immediateFlush>false</immediateFlush>
+    </encoder>
+  </appender>
+
+  <root level="info">
+    <appender-ref ref="testlog" />
+  </root>
+</configuration>

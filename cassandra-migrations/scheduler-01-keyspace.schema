@@ -1,0 +1,4 @@
+create keyspace <YourServiceName>Scheduler
+  with placement_strategy = 'NetworkTopologyStrategy'
+  and strategy_options = {DC-A : 2, DC-B : 2, DC-C : 1}
+  and durable_writes = true;

@@ -1,0 +1,38 @@
+branches:
+  only:
+    - master
+env:
+  global:
+    - secure: "tqMICNzlFxX9rVnEeFITTjw8Dy+PTnQFNV7c1/LjLjlLKGVr6okRs/BQTpLBPogHadKazLdNcX40ClAMA1Tfnqk3qZ0u1lfqEDGT6cj85vHmiAEMnyS1p5iKQjC3xt/+CurpaBj35Um72I2rzG3uIcpDK0YubWHI3uzVu30v0+ex0iOELMi9pCozntLjnRxPruzL+5UTEce7s+zWM3TiZUz5Ivt+Tn3jZZlq3yHFL3uNNnNj166R4LL0qesfMB9uFmuXrM3b24qaZeFNG9/kowERx42bXeI4A4y6rhOZnjN4Gs3bVnxbGVK3QbYy4wSpJIrdZ/zhfQg5jlnCeu9TsKGT6HjEXZjvqMABiO1oBrneRRsqzGHI3rvYnPVp6wEyYzRCCI0joNyHi0KBvuzKTzOAuOhYcn1+y+MDBpRfbQtjpMsG25UmLG+sxJ9Hlhq9PLp4+UnRQvgPxJTcATNKCTepV2RTGEb4xixYYE92kPZfP3imE9WNDA5larKBFXFg05E50miLbAL/lmcbcG5B+q+YMY0X2lE1BkYrdFoTsfVBSIC7IsMAqWsBJEbFjGjsOsw4vpLkBA+TN1hPOcrBoVQjMwids2+8flg3iw7HkaSsDzdpq/x2hk7X9AsQZE/crVCjBDUWMdKg9Vhtd1oL7TOKlsN3RCCfDIZHTwLDgiI="
+language: scala
+scala:
+  - 2.10.4
+  - 2.11.7
+jdk:
+  - oraclejdk7
+sudo: required
+dist: trusty
+cache:
+  directories:
+    - ~/.ivy2
+    - ~/travis-deps
+  apt: true
+before_install:
+  - curl https://raw.githubusercontent.com/PagerDuty/pd-travis-deps/master/zookeeper | /bin/sh
+  - curl https://raw.githubusercontent.com/PagerDuty/pd-travis-deps/master/kafka | /bin/sh
+  - curl https://raw.githubusercontent.com/PagerDuty/pd-travis-deps/master/cassandra | /bin/sh
+  - cd $TRAVIS_BUILD_DIR
+  - mkdir ~/.sbt
+  - cp .travisci/credentials.sbt ~/.sbt
+  - sed -i "s|%{password}|$ARTIFACTORY_PASS|" ~/.sbt/credentials.sbt
+before_script:
+  - ~/travis-deps/start-zookeeper.sh && sleep 3
+  - ~/travis-deps/start-kafka.sh && sleep 3
+  - (JVM_OPTS="" ~/travis-deps/start-cassandra.sh && sleep 6)
+  - ~/travis-deps/kafka_2.11-0.9.0.1/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 16 --topic scheduler-integration-test-queue
+
+script:
+  - sbt -Dsbt.log.noformat=true -sbt-dir ~/.sbt ++$TRAVIS_SCALA_VERSION test
+  - sbt -Dsbt.log.noformat=true -sbt-dir ~/.sbt ++$TRAVIS_SCALA_VERSION it:test
+after_success:
+- sh "$TRAVIS_BUILD_DIR/.travis.release.sh"
