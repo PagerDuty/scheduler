@@ -2,8 +2,12 @@
 
 ## Introduction
 
-This library schedules work using Kafka for buffering and elasticity and Cassandra for persistence. Most documentation is
-in the specific guides in doc/
+This library schedules arbitrary Scala code (tasks) to run at an arbitrary time. It tries to do this despite changing infrastructure, and it tries to maintain some sense of task ordering.
+
+Scheduler is in production use at PagerDuty. It's meant to be included in Scala services deployed on many servers for redundancy and scaling. It's designed from the ground up to be running in a multi-datacenter environment. We take fault tolerance and reliability very seriously, so using this library is a little more complicated then just including it via SBT.
+
+Scheduler relies on Kafka for task buffering and Cassandra for task persistence. Most documentation is
+in the specific guides in doc/.
 
 ## Additional Documentation
 - [Akka Style Guide](doc/akka-style-guide.md)
@@ -68,6 +72,5 @@ on GH and ask us beforehand.
 
 Follow these steps to release a new version:
  - Update version.sbt in your PR
- - Update CHANGELOG.md in your PR
  - When the PR is approved, merge it to master, and delete the branch
  - Travis will run all tests, publish to Artifactory, and create a new version tag in Github
