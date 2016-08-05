@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Pd-Scheduler is a task scheduling library made for building distributed services at PagerDuty.
+Scheduler is a task scheduling library made for building distributed services at PagerDuty.
 
 It provides the following functionality:
 
@@ -15,12 +15,12 @@ It provides the following functionality:
 - Distributes tasks in your service cluster. This includes automatic rebalancing as individual hosts in your cluster are added or removed (or crash or recover).
 
 
-Pd-Scheduler is intended as a replacement for our current WorkQueues. The new library provides scheduling but does NOT provide "fairness". It is also not intended for simple FIFO usage. (you could use it for that, but you should use just Kafka - see the pd-kafka-consumer library)
+Scheduler is intended as a replacement for our current WorkQueues. The new library provides scheduling but does NOT provide "fairness". It is also not intended for simple FIFO usage. (you could use it for that, but you should use just Kafka - see the pd-kafka-consumer library)
 
 
 ## High-level Design
 
-Pd-Scheduler is a library that you include in your service code, not a separate service. The main API is specified
+Scheduler is a library that you include in your service code, not a separate service. The main API is specified
 in [`SchedulerClient`](https://docs.pd-internal.com/scala/scheduler-scala-api/#com.pagerduty.scheduler.SchedulerClient).
 
 It's operation is shown in the following diagram:
@@ -94,7 +94,7 @@ Note that PagerDuty infrastructure has a "bitpipe" Kafka cluster which is meant 
 
 ### Library Setup
 
-- Include the Pd-Scheduler library in your project.
+- Include the Scheduler library in your project.
 - Copy the schema migrations from `cassandra-migrations/` to your project, and change the keyspace name in those files from `<YourServiceName>Scheduler` to a suitable name (e.g. `ApolloScheduler`)
 - Add configuration with appropriate Kafka & Cassandra details
 - Instantiate a Scheduler instance in your service
