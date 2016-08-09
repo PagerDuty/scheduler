@@ -13,18 +13,56 @@ resolvers in ThisBuild := Seq(
     Resolver.defaultLocal
   )
 
+lazy val bintraySettings = Seq(
+  bintrayOrganization := Some("pagerduty"),
+  bintrayRepository := "oss-maven",
+  licenses += ("BSD New", url("https://opensource.org/licenses/BSD-3-Clause")),
+  publishMavenStyle := true,
+  pomExtra := (
+    <url>https://github.com/PagerDuty/scheduler</url>
+    <scm>
+      <url>git@github.com:PagerDuty/scheduler.git</url>
+      <connection>scm:git:git@github.com:PagerDuty/scheduler.git</connection>
+    </scm>
+    <developers>
+      <developer>
+        <id>lexn82</id>
+        <name>Aleksey Nikiforov</name>
+        <url>https://github.com/lexn82</url>
+      </developer>
+      <developer>
+        <id>cdegroot</id>
+        <name>Cees de Groot</name>
+        <url>https://github.com/cdegroot</url>
+      </developer>
+      <developer>
+        <id>DWvanGeest</id>
+        <name>David van Geest</name>
+        <url>https://github.com/DWvanGeest</url>
+      </developer>
+      <developer>
+        <id>divtxt</id>
+        <name>Div Shekhar</name>
+        <url>https://github.com/divtxt</url>
+      </developer>
+      <developer>
+        <id>jppierri</id>
+        <name>Joseph Pierri</name>
+        <url>https://github.com/jppierri</url>
+      </developer>
+    </developers>)
+)
 
 // Dependencies:
 //   scheduler and scala-api are both top-level dependencies which can be mixed in into other
 //   projects (one or both, depending on whether the project provides its own interface to
 //   its underlying scheduler). Common has code that both depend on. As the scheduler integration
 //   tests need to enqueue, they depend on the api module as well.
-
 lazy val sharedSettings = Seq(
   organization := "com.pagerduty",
   scalaVersion := "2.11.7",
   crossScalaVersions := Seq("2.10.4", "2.11.7")
-)
+) ++ bintraySettings
 
 lazy val common = (project in file("common")).
   settings(sharedSettings: _*).
