@@ -94,7 +94,21 @@ Note that PagerDuty infrastructure has a "bitpipe" Kafka cluster which is meant 
 
 ### Library Setup
 
-- Include the Scheduler library in your project.
+- This set of libraries is published to PagerDuty Bintray OSS Maven repository. Add it to your resolvers:
+
+```scala
+resolvers += "bintray-pagerduty-oss-maven" at "https://dl.bintray.com/pagerduty/oss-maven"
+```
+
+- Then add the dependency to your SBT build file:
+
+```scala
+libraryDependencies ++= Seq(
+  "com.pagerduty" %% "scheduler" % "<latest version>",
+  "com.pagerduty" %% "scheduler-scala-api" % "<latest version>" // only if scheduling tasks from Scala
+)
+```
+
 - Copy the schema migrations from `cassandra-migrations/` to your project, and change the keyspace name in those files from `<YourServiceName>Scheduler` to a suitable name (e.g. `ApolloScheduler`)
 - Add configuration with appropriate Kafka & Cassandra details
 - Instantiate a Scheduler instance in your service
