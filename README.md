@@ -73,4 +73,4 @@ on GH and ask us beforehand.
 Follow these steps to release a new version:
  - Update version.sbt in your PR
  - When the PR is approved, merge it to master, and delete the branch
- - Travis will run all tests, publish to Artifactory, and create a new version tag in Github
+ - Travis will run all tests, publish to Bintray, and create a new version tag in Github
