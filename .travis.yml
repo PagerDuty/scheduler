@@ -35,6 +35,5 @@ before_script:
 
 script:
   - sbt -Dsbt.log.noformat=true -sbt-dir ~/.sbt ++$TRAVIS_SCALA_VERSION test
-  - sbt -Dsbt.log.noformat=true -sbt-dir ~/.sbt ++$TRAVIS_SCALA_VERSION it:test
 after_success:
 - sh "$TRAVIS_BUILD_DIR/.travis.release.sh"
