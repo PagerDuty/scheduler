@@ -1,4 +1,4 @@
-# Scheduler [![Build Status](https://travis-ci.com/PagerDuty/scheduler.svg?token=UxiJumPCnAq598SFB4MA&branch=master)](https://travis-ci.com/PagerDuty/scheduler/builds)
+# Scheduler [![Build Status](https://travis-ci.org/PagerDuty/scheduler.svg?branch=master)](https://travis-ci.org/PagerDuty/scheduler/builds)
 
 ## Introduction
 
