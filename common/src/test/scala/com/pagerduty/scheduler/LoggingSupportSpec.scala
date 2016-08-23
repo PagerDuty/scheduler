@@ -1,10 +1,11 @@
 package com.pagerduty.scheduler
 
-import com.pagerduty.metrics.{ Event, Metrics }
+import com.pagerduty.metrics.{ Event, Metrics, NullMetrics }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{ Matchers, WordSpecLike }
 import org.slf4j.Logger
+
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, Promise }
 import scala.util.Try
@@ -14,7 +15,7 @@ class LoggingSupportSpec extends WordSpecLike with Matchers with Eventually with
 
   // Because of buggy mocking (said lex).
   case class AddMetricsInvocation(name: String, tags: Seq[(String, String)])
-  class MockStats extends Metrics {
+  class MockStats extends NullMetrics {
     private var _invocations = Seq.empty[AddMetricsInvocation]
     def invocations = this.synchronized {
       _invocations
@@ -22,10 +23,6 @@ class LoggingSupportSpec extends WordSpecLike with Matchers with Eventually with
     override def histogram(name: String, value: Int, tags: (String, String)*): Unit = this.synchronized {
       _invocations :+= AddMetricsInvocation(name, tags)
     }
-
-    // Unused
-    override def count(name: String, count: Int, tags: (String, String)*): Unit = ???
-    override def recordEvent(event: Event): Unit = ???
   }
   val successTag = "result" -> "success"
   val failureTag = "result" -> "failure"

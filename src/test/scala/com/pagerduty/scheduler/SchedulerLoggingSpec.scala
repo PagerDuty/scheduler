@@ -2,7 +2,7 @@ package com.pagerduty.scheduler
 
 import com.pagerduty.scheduler.dao.AttemptHistoryDao
 import com.pagerduty.scheduler.gauge.StaleTasksGauge
-import com.pagerduty.metrics.{ Event, Metrics }
+import com.pagerduty.metrics.{ Event, Metrics, NullMetrics }
 import com.pagerduty.scheduler.model.CompletionResult
 import com.pagerduty.scheduler.specutil.{ TaskFactory, UnitSpec }
 import com.typesafe.config.{ Config, ConfigFactory }
@@ -10,6 +10,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfter
 import org.scalatest.time.{ Seconds, Span }
 import org.slf4j.Logger
+
 import scala.concurrent.duration.{ FiniteDuration, _ }
 import scala.concurrent.{ Await, Future, Promise }
 import scala.util.Try
@@ -18,7 +19,7 @@ class SchedulerLoggingSpec extends UnitSpec with MockFactory with BeforeAndAfter
 
   // Because of buggy mocking.
   case class AddMetricsInvocation(name: String, tags: Seq[(String, String)])
-  class MockMetrics extends Metrics {
+  class MockMetrics extends NullMetrics {
     private var _invocations = Seq.empty[AddMetricsInvocation]
     def invocations = this.synchronized {
       _invocations
@@ -26,10 +27,6 @@ class SchedulerLoggingSpec extends UnitSpec with MockFactory with BeforeAndAfter
     override def histogram(name: String, value: Int, tags: (String, String)*): Unit = this.synchronized {
       _invocations :+= AddMetricsInvocation(name, tags)
     }
-
-    // Unused
-    override def count(name: String, count: Int, tags: (String, String)*): Unit = ???
-    override def recordEvent(event: Event): Unit = ???
   }
   val successTag = "result" -> "success"
   val failureTag = "result" -> "failure"
@@ -58,7 +55,7 @@ class SchedulerLoggingSpec extends UnitSpec with MockFactory with BeforeAndAfter
     "register a stale tasks gauge successfully" in {
       class TestSchedulerKafkaConsumer extends SchedulerKafkaConsumer(
         SchedulerSettings(ConfigFactory.load()),
-        ConfigFactory.load(), null, null, null, null, null
+        ConfigFactory.load(), null, null, null, null, null, NullMetrics
       ) {
         override def countStaleTasks: Int = 1
       }

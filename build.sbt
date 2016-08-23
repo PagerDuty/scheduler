@@ -69,7 +69,7 @@ lazy val common = (project in file("common")).
   settings(
     name := "scheduler-common",
     libraryDependencies ++= Seq(
-      "com.pagerduty" %% "metrics-api" % "1.0.8",
+      "com.pagerduty" %% "metrics-api" % "1.1.0",
       "org.json4s"   %% "json4s-jackson" % "3.3.0",
       "com.twitter" %% "util-core" % "6.22.2",
       "ch.qos.logback" % "logback-classic" % "1.1.3",
@@ -87,7 +87,7 @@ lazy val scalaApi = (project in file("scala-api")).
   settings(
     name := "scheduler-scala-api",
     libraryDependencies ++= Seq(
-      "com.pagerduty" %% "metrics-api" % "1.0.7",
+      "com.pagerduty" %% "metrics-api" % "1.1.0",
       "org.scalatest" %% "scalatest" % "2.2.6" % "test",
       "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
     )
@@ -106,7 +106,7 @@ lazy val root = (project in file(".")).
       val scalatraVersion = "2.4.0"
       val kafkaConsumerVersion = "0.3.2"
       Seq(
-        "com.pagerduty" %% "metrics-api" % "1.0.7",
+        "com.pagerduty" %% "metrics-api" % "1.1.0",
         "com.pagerduty" %% "eris-pd" % "3.0.2" exclude("org.slf4j", "slf4j-log4j12"),
         "com.pagerduty" %% "kafka-consumer" % kafkaConsumerVersion,
         "com.pagerduty" %% "kafka-consumer-test-support" % kafkaConsumerVersion  exclude("org.slf4j", "slf4j-simple"),

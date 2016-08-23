@@ -1,20 +1,20 @@
 package com.pagerduty.scheduler
 
 import java.util.{ Collection, Properties }
+
 import com.netflix.astyanax.{ Cluster, Keyspace }
 import com.pagerduty.scheduler.akka.SchedulingSystem
-import com.pagerduty.scheduler.gauge.{ GaugeRunner, StaleTasksGauge }
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.typesafe.config.Config
 import org.apache.kafka.clients.consumer.{ ConsumerRebalanceListener, ConsumerRecord, ConsumerRecords }
 import org.apache.kafka.common.TopicPartition
-import com.pagerduty.kafkaconsumer.SimpleKafkaConsumer
+import com.pagerduty.kafkaconsumer.{ ConsumerMetrics, SimpleKafkaConsumer }
+import com.pagerduty.metrics.Metrics
+
 import scala.collection.JavaConversions._
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success, Try }
-import scala.util.control.NonFatal
 
 /**
  * The kafka consumer used by the scheduler. It consumes the messages created when a task is
@@ -33,14 +33,16 @@ class SchedulerKafkaConsumer(
   keyspace: Keyspace,
   kafkaConsumerProperties: Properties,
   taskExecutorServiceFactory: Set[PartitionId] => TaskExecutorService,
-  logging: Scheduler.Logging
+  logging: Scheduler.Logging,
+  metrics: Metrics
 )
     extends SimpleKafkaConsumer[String, String](
       schedulerSettings.kafkaTopic,
       kafkaConsumerProperties,
       pollTimeout = 400.millis,
       restartOnExceptionDelay = schedulerSettings.kafkaPdConsumerRestartOnExceptionDelay,
-      commitOffsetTimeout = 10.seconds
+      commitOffsetTimeout = 10.seconds,
+      metrics = new SchedulerConsumerMetrics(metrics)
     ) {
 
   @volatile private var initializedSchedulingSystem: Try[SchedulingSystem] = {
@@ -137,5 +139,11 @@ class SchedulerKafkaConsumer(
 
   private[scheduler] def triggerPartitionRebalancing(): Unit = {
     shutdownResources()
+  }
+}
+
+class SchedulerConsumerMetrics(metrics: Metrics) extends ConsumerMetrics {
+  def timeCommitSync(f: => Unit): Unit = {
+    metrics.time("kafka_consumer.commit_sync")(f)
   }
 }
