@@ -111,7 +111,7 @@ class SchedulerKafkaConsumer(
         val schedulerPartitions = partitionIdSet(partitionAssignment)
         logging.reportPartitionsAssigned(schedulerPartitions)
         new SchedulingSystem(
-          config, cluster, keyspace, schedulerPartitions, taskExecutorServiceFactory, logging
+          config, cluster, keyspace, schedulerPartitions, taskExecutorServiceFactory, logging, metrics
         )
       }
     }

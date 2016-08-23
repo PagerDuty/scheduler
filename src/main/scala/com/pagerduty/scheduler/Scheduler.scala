@@ -98,7 +98,7 @@ class SchedulerImpl(
   logging.registerStaleTasksGauge(staleTasksGauge)
   gaugeRunner.runGauge(staleTasksGauge, 1.minute)
 
-  private lazy val erisPdSettings = new ErisPdSettings(config)
+  private lazy val erisPdSettings = new ErisPdSettings(config, metrics)
 
   private def getTaskScheduleDao(): TaskScheduleDao = {
     new TaskScheduleDaoImpl(cluster, keyspace, erisPdSettings)

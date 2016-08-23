@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.pattern.AskTimeoutException
 import akka.testkit.TestProbe
 import com.netflix.astyanax.Cluster
+import com.pagerduty.metrics.NullMetrics
 import com.pagerduty.scheduler.akka.TopicSupervisor.{ ProcessTaskBatch, TaskBatchNotProcessed, TaskBatchProcessed }
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
@@ -12,6 +13,7 @@ import com.pagerduty.scheduler.specutil.ActorPathFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.concurrent.ScalaFutures
+
 import scala.concurrent.Future
 
 class SchedulingSystemSpec
@@ -31,7 +33,7 @@ class SchedulingSystemSpec
   val logging = stub[Scheduler.Logging]
 
   class TestSchedulingSystem extends SchedulingSystem(config, cluster, keyspace, partitions,
-    executorFactory, logging) {
+    executorFactory, logging, NullMetrics) {
     override protected val system = mockSystem
     override protected lazy val queueSupervisor = mockTopicSupervisor
   }

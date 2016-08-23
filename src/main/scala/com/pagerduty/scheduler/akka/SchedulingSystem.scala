@@ -6,12 +6,14 @@ import akka.pattern.AskTimeoutException
 import akka.util.Timeout
 import com.netflix.astyanax.{ Cluster, Keyspace }
 import com.pagerduty.eris.custom.ErisPdSettings
+import com.pagerduty.metrics.Metrics
 import com.pagerduty.scheduler.dao.{ TaskScheduleDaoImpl, TaskStatusDaoImpl }
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.{ Scheduler, TaskExecutorService, _ }
 import com.twitter.util.Time
 import com.typesafe.config.Config
+
 import scala.annotation.tailrec
 import scala.concurrent.{ Await, TimeoutException }
 import scala.concurrent.duration._
@@ -31,13 +33,14 @@ class SchedulingSystem(
     keyspace: Keyspace,
     partitions: Set[PartitionId],
     taskExecutorServiceFactory: Set[PartitionId] => TaskExecutorService,
-    logging: Scheduler.Logging
+    logging: Scheduler.Logging,
+    metrics: Metrics
 ) {
   import SchedulingSystem._
 
   private val settings = Settings(config)
   private val askPersistRequestTimeout = settings.askPersistRequestTimeout
-  private val erisPdSettings = new ErisPdSettings(config)
+  private val erisPdSettings = new ErisPdSettings(config, metrics)
   private lazy val taskScheduleDao = new TaskScheduleDaoImpl(cluster, keyspace, erisPdSettings)
 
   /**

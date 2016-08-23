@@ -1,11 +1,13 @@
 package com.pagerduty.scheduler
 
+import com.pagerduty.metrics.NullMetrics
 import com.pagerduty.scheduler.akka.SchedulingSystem
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.twitter.util.Time
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.BeforeAndAfter
+
 import scala.concurrent.duration._
 
 class SchedulerIntegrationWhiteboxSpec
@@ -25,7 +27,7 @@ class SchedulerIntegrationWhiteboxSpec
     "should shut down the entire actor system upon encountering an exception" in {
       val partitionIds = Set[PartitionId](0)
       val schedulingSystem = {
-        new SchedulingSystem(config, cluster, keyspace, partitionIds, executorFactory, logging)
+        new SchedulingSystem(config, cluster, keyspace, partitionIds, executorFactory, logging, NullMetrics)
       }
       val scheduledTime = (Time.now + 5.seconds).floor(1.millisecond)
       val task = new Task("oid1", scheduledTime, "uniq-key-1", Map("k" -> "v"))
