@@ -89,7 +89,7 @@ class SchedulerImpl(
     }
     new SchedulerKafkaConsumer(
       schedulerSettings, config, cluster, keyspace,
-      kafkaConsumerProps, taskExecutorServiceFactory, logging
+      kafkaConsumerProps, taskExecutorServiceFactory, logging, metrics
     )
   }
 
