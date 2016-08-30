@@ -1,10 +1,11 @@
 package com.pagerduty.scheduler
 
 import com.netflix.astyanax.{Cluster, Keyspace}
+import com.pagerduty.eris.dao.ErisSettings
 import com.pagerduty.eris.schema.SchemaLoader
 import com.pagerduty.eris.{ClusterCtx, TimeUuid}
 import com.pagerduty.eris.serializers._
-import com.pagerduty.eris.custom._
+import com.pagerduty.eris.dao._
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.widerow.{Bound, EntryColumn}
@@ -19,9 +20,9 @@ object CassandraTaskExecutorTestService {
   class LogEntryDao(
     protected val cluster: Cluster,
     protected val keyspace: Keyspace,
-    protected val settings: ErisPdSettings
+    override protected val settings: ErisSettings
   )
-      extends PdDao {
+      extends Dao {
 
     protected implicit val executor: ExecutionContextExecutor = ExecutionContext.Implicits.global
 
@@ -48,7 +49,7 @@ object CassandraTaskExecutorTestService {
 
   private def makeLogEntryDao(cluster: Cluster) = {
     val keyspace = cluster.getKeyspace(KeyspaceName)
-    new LogEntryDao(cluster, keyspace, new ErisPdSettings())
+    new LogEntryDao(cluster, keyspace, new ErisSettings())
   }
 
   def schemaLoader(cluster: Cluster): SchemaLoader = {

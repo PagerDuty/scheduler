@@ -1,7 +1,7 @@
 package com.pagerduty.scheduler.dao
 
 import com.netflix.astyanax.{ Cluster, Keyspace }
-import com.pagerduty.eris.custom._
+import com.pagerduty.eris.dao._
 import com.pagerduty.eris.serializers._
 import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.model.Task.PartitionId
@@ -37,10 +37,10 @@ object AttemptHistoryDao {
 class AttemptHistoryDaoImpl(
   protected val cluster: Cluster,
   protected val keyspace: Keyspace,
-  protected val settings: ErisPdSettings,
+  override protected val settings: ErisSettings,
   columnTtl: Duration = AttemptHistoryDao.ColumnTtl
 )
-    extends AttemptHistoryDao with TaskDaoImpl with PdDao {
+    extends AttemptHistoryDao with TaskDaoImpl with Dao {
   type RowKey = (PartitionId, TimeBucketKey)
 
   protected implicit val taskAttemptSerializer = {

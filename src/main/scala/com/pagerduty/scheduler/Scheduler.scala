@@ -1,7 +1,7 @@
 package com.pagerduty.scheduler
 
 import com.netflix.astyanax.{ Cluster, Keyspace }
-import com.pagerduty.eris.custom.ErisPdSettings
+import com.pagerduty.eris.dao.ErisSettings
 import com.pagerduty.scheduler.admin.AdminServiceImpl
 import com.pagerduty.scheduler.admin.standalone.AdminHttpServer
 import com.pagerduty.scheduler.akka.FailureResponse
@@ -98,18 +98,18 @@ class SchedulerImpl(
   logging.registerStaleTasksGauge(staleTasksGauge)
   gaugeRunner.runGauge(staleTasksGauge, 1.minute)
 
-  private lazy val erisPdSettings = new ErisPdSettings(config, metrics)
+  private lazy val erisSettings = new ErisSettings(metrics)
 
   private def getTaskScheduleDao(): TaskScheduleDao = {
-    new TaskScheduleDaoImpl(cluster, keyspace, erisPdSettings)
+    new TaskScheduleDaoImpl(cluster, keyspace, erisSettings)
   }
 
   private def getAttemptHistoryDao(): AttemptHistoryDao = {
-    new AttemptHistoryDaoImpl(cluster, keyspace, erisPdSettings)
+    new AttemptHistoryDaoImpl(cluster, keyspace, erisSettings)
   }
 
   private def getTaskStatusDao(): TaskStatusDao = {
-    new TaskStatusDaoImpl(cluster, keyspace, erisPdSettings)
+    new TaskStatusDaoImpl(cluster, keyspace, erisSettings)
   }
 
   lazy val adminService = new AdminServiceImpl(

@@ -1,6 +1,5 @@
 package com.pagerduty.scheduler
 
-import com.pagerduty.eris.config.{AstyanaxConfigBuilder, ConnectionPoolConfigBuilder}
 import com.pagerduty.eris.schema.SchemaLoader
 import com.pagerduty.scheduler.model.Task
 import com.twitter.util.Time

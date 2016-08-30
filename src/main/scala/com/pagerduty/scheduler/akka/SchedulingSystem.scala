@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.pattern.AskTimeoutException
 import akka.util.Timeout
 import com.netflix.astyanax.{ Cluster, Keyspace }
-import com.pagerduty.eris.custom.ErisPdSettings
+import com.pagerduty.eris.dao.ErisSettings
 import com.pagerduty.metrics.Metrics
 import com.pagerduty.scheduler.dao.{ TaskScheduleDaoImpl, TaskStatusDaoImpl }
 import com.pagerduty.scheduler.model.Task
@@ -40,8 +40,8 @@ class SchedulingSystem(
 
   private val settings = Settings(config)
   private val askPersistRequestTimeout = settings.askPersistRequestTimeout
-  private val erisPdSettings = new ErisPdSettings(config, metrics)
-  private lazy val taskScheduleDao = new TaskScheduleDaoImpl(cluster, keyspace, erisPdSettings)
+  private val erisSettings = new ErisSettings(metrics)
+  private lazy val taskScheduleDao = new TaskScheduleDaoImpl(cluster, keyspace, erisSettings)
 
   /**
    * Calculates the number of stale tasks across all partitions, assigned and unasssigned
@@ -72,7 +72,7 @@ class SchedulingSystem(
   }
   protected val taskExecutorService = taskExecutorServiceFactory(partitions)
   protected lazy val queueSupervisor = {
-    val taskStatusDao = new TaskStatusDaoImpl(cluster, keyspace, erisPdSettings)
+    val taskStatusDao = new TaskStatusDaoImpl(cluster, keyspace, erisSettings)
 
     val queueContext = {
       QueueContext(taskScheduleDao, taskStatusDao, taskExecutorService, logging)

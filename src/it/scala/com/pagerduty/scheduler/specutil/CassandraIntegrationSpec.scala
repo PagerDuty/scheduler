@@ -1,8 +1,8 @@
 package com.pagerduty.scheduler.specutil
 
-import com.pagerduty.eris.ClusterCtx
-import com.pagerduty.eris.config.{AstyanaxConfigBuilder, ConnectionPoolConfigBuilder}
-import com.pagerduty.eris.custom.{ErisPdSettings, PdConnectionPoolMonitorImpl}
+import com.netflix.astyanax.connectionpool.impl.CountingConnectionPoolMonitor
+import com.pagerduty.scheduler.dao.TestClusterCtx
+import com.pagerduty.eris.dao.ErisSettings
 import com.pagerduty.eris.schema.SchemaLoader
 import com.pagerduty.scheduler.dao.{AttemptHistoryDaoImpl, TaskStatusDaoImpl, TaskScheduleDaoImpl}
 import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
@@ -10,26 +10,13 @@ import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
 import scala.util.control.NonFatal
 
 trait CassandraIntegrationSpec extends FreeSpecLike with BeforeAndAfterAll {
-  def makeClusterCtx() = new ClusterCtx(
-    clusterName = "CassCluster",
-    astyanaxConfig = AstyanaxConfigBuilder.build(
-      asyncThreadPoolName = "AstyanaxAsync",
-      asyncThreadPoolSize = 50
-    ),
-    connectionPoolConfig = ConnectionPoolConfigBuilder.build(
-      connectionPoolName = "CassConnectionPool",
-      cassPort = 9160,
-      hosts = "localhost:9160",
-      maxConnectionsPerHost = 50
-    ),
-    connectionPoolMonitor = new PdConnectionPoolMonitorImpl
-  )
+  def makeClusterCtx() = new TestClusterCtx
   lazy val clusterCtx = makeClusterCtx()
 
   val cluster = clusterCtx.cluster
   val keyspace = cluster.getKeyspace("SchedulerIntegrationSpec")
-  val erisPdSettings = new ErisPdSettings()
-  lazy val attemptHistoryDaoImpl = new AttemptHistoryDaoImpl(cluster, keyspace, erisPdSettings)
+  val erisSettings = new ErisSettings()
+  lazy val attemptHistoryDaoImpl = new AttemptHistoryDaoImpl(cluster, keyspace, erisSettings)
 
   override def beforeAll() {
     dropAndLoadCassSchema()
@@ -58,8 +45,8 @@ trait CassandraIntegrationSpec extends FreeSpecLike with BeforeAndAfterAll {
   }
 
   protected def getSchemaLoader(): SchemaLoader = {
-    val taskScheduleDaoImpl = new TaskScheduleDaoImpl(cluster, keyspace, erisPdSettings)
-    val taskStatusDaoImpl = new TaskStatusDaoImpl(cluster, keyspace, erisPdSettings)
+    val taskScheduleDaoImpl = new TaskScheduleDaoImpl(cluster, keyspace, erisSettings)
+    val taskStatusDaoImpl = new TaskStatusDaoImpl(cluster, keyspace, erisSettings)
 
     val columnFamilyDefs = {
       taskScheduleDaoImpl.columnFamilyDefs ++

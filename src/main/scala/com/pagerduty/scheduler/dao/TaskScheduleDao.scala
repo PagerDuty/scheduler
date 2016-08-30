@@ -5,7 +5,7 @@ import com.netflix.astyanax.model.ByteBufferRange
 import com.netflix.astyanax.util.RangeBuilder
 import com.netflix.astyanax.{ Cluster, Keyspace }
 import com.pagerduty.eris.FutureConversions._
-import com.pagerduty.eris.custom._
+import com.pagerduty.eris.dao._
 import com.pagerduty.eris.serializers._
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{ Task, TaskKey }
@@ -83,9 +83,9 @@ trait TaskScheduleDao {
 class TaskScheduleDaoImpl(
   protected val cluster: Cluster,
   protected val keyspace: Keyspace,
-  protected val settings: ErisPdSettings
+  override protected val settings: ErisSettings
 )
-    extends TaskScheduleDao with TaskDaoImpl with PdDao {
+    extends TaskScheduleDao with TaskDaoImpl with Dao {
 
   type RowKey = (PartitionId, TimeBucketKey)
 

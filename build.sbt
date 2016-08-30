@@ -107,7 +107,8 @@ lazy val root = (project in file(".")).
       val kafkaConsumerVersion = "0.3.2"
       Seq(
         "com.pagerduty" %% "metrics-api" % "1.1.0",
-        "com.pagerduty" %% "eris-pd" % "3.1.0" exclude("org.slf4j", "slf4j-log4j12"),
+        "com.pagerduty" %% "eris-dao" % "2.0.0",
+        "com.pagerduty" %% "eris-dao" % "2.0.0" % "it" classifier "tests",
         "com.pagerduty" %% "kafka-consumer" % kafkaConsumerVersion,
         "com.pagerduty" %% "kafka-consumer-test-support" % kafkaConsumerVersion  exclude("org.slf4j", "slf4j-simple"),
         "com.typesafe.akka" %% "akka-actor" % "2.3.14",
