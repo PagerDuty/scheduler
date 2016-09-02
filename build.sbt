@@ -68,7 +68,7 @@ lazy val common = (project in file("common")).
   settings(
     name := "scheduler-common",
     libraryDependencies ++= Seq(
-      "com.pagerduty" %% "metrics-api" % "1.1.0",
+      "com.pagerduty" %% "metrics-api" % "1.2.1",
       "org.json4s"   %% "json4s-jackson" % "3.3.0",
       "com.twitter" %% "util-core" % "6.22.2",
       "ch.qos.logback" % "logback-classic" % "1.1.3",
@@ -86,7 +86,7 @@ lazy val scalaApi = (project in file("scala-api")).
   settings(
     name := "scheduler-scala-api",
     libraryDependencies ++= Seq(
-      "com.pagerduty" %% "metrics-api" % "1.1.0",
+      "com.pagerduty" %% "metrics-api" % "1.2.1",
       "org.scalatest" %% "scalatest" % "2.2.6" % "test",
       "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
     )
@@ -105,7 +105,7 @@ lazy val root = (project in file(".")).
       val scalatraVersion = "2.4.0"
       val kafkaConsumerVersion = "0.3.2"
       Seq(
-        "com.pagerduty" %% "metrics-api" % "1.1.0",
+        "com.pagerduty" %% "metrics-api" % "1.2.1",
         "com.pagerduty" %% "eris-dao" % "2.0.0",
         "com.pagerduty" %% "eris-dao" % "2.0.0" % "it" classifier "tests",
         "com.pagerduty" %% "kafka-consumer" % kafkaConsumerVersion,
