@@ -7,11 +7,10 @@ unmanagedSourceDirectories in IntegrationTest +=
 
 testOptions in IntegrationTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD")
 
-// See https://github.com/PagerDuty/eris-pd/blob/master/build.sbt#L27
 resolvers in ThisBuild := Seq(
-    "bintray-pagerduty-oss-maven" at "https://dl.bintray.com/pagerduty/oss-maven",
-    Resolver.defaultLocal
-  )
+  "bintray-pagerduty-oss-maven" at "https://dl.bintray.com/pagerduty/oss-maven",
+  Resolver.defaultLocal
+)
 
 lazy val bintraySettings = Seq(
   bintrayOrganization := Some("pagerduty"),
