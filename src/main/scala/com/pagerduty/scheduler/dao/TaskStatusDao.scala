@@ -1,7 +1,7 @@
 package com.pagerduty.scheduler.dao
 
 import com.netflix.astyanax.{ Cluster, Keyspace }
-import com.pagerduty.eris.custom._
+import com.pagerduty.eris.dao._
 import com.pagerduty.eris.serializers._
 import com.pagerduty.scheduler.model.{ TaskKey, TaskStatus }
 import com.pagerduty.scheduler.model.Task.PartitionId
@@ -52,10 +52,10 @@ trait TaskStatusDao {
 class TaskStatusDaoImpl(
   protected val cluster: Cluster,
   protected val keyspace: Keyspace,
-  protected val settings: ErisPdSettings,
+  override protected val settings: ErisSettings,
   columnTtl: Duration = TaskStatusDao.ColumnTtl
 )
-    extends TaskStatusDao with TaskDaoImpl with PdDao {
+    extends TaskStatusDao with TaskDaoImpl with Dao {
   type RowKey = (PartitionId, TimeBucketKey)
 
   protected implicit val taskStatusSerializer = {

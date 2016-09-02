@@ -2,8 +2,7 @@ package com.pagerduty.scheduler.dao
 
 import com.netflix.astyanax.{Cluster, Keyspace}
 import com.pagerduty.eris.TimeUuid
-import com.pagerduty.eris.custom.ErisPdSettings
-import com.pagerduty.eris.dao.DaoFixture
+import com.pagerduty.eris.dao._
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{Task, TaskKey}
 import com.pagerduty.scheduler.specutil.TaskFactory
@@ -21,7 +20,7 @@ class TaskScheduleDaoSpec
 
   type FixtureParam = TaskScheduleDaoImpl
   override protected def mkFixtureDao(cluster: Cluster, keyspace: Keyspace): FixtureParam = {
-    new TaskScheduleDaoImpl(cluster, keyspace, new ErisPdSettings)
+    new TaskScheduleDaoImpl(cluster, keyspace, new ErisSettings)
   }
 
   val partitionId: PartitionId = 1

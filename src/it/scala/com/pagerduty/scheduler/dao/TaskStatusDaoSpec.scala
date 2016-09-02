@@ -3,8 +3,7 @@ package com.pagerduty.scheduler.dao
 import org.scalatest.time.{Seconds, Span}
 import scala.util.Random
 import com.netflix.astyanax.{Cluster, Keyspace}
-import com.pagerduty.eris.custom.ErisPdSettings
-import com.pagerduty.eris.dao.DaoFixture
+import com.pagerduty.eris.dao._
 import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{CompletionResult, Task, TaskKey, TaskStatus}
@@ -22,7 +21,7 @@ class TaskStatusDaoSpec
   type FixtureParam = TaskStatusDaoImpl
   val columnTtl = 3.seconds
   override protected def mkFixtureDao(cluster: Cluster, keyspace: Keyspace): FixtureParam = {
-    new TaskStatusDaoImpl(cluster, keyspace, new ErisPdSettings, columnTtl)
+    new TaskStatusDaoImpl(cluster, keyspace, new ErisSettings, columnTtl)
   }
   val successStatus: TaskStatus = TaskStatus.successful(2)
   val failureStatus: TaskStatus = TaskStatus.failed(3)

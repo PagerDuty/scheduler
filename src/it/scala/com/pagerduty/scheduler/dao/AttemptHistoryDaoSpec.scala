@@ -1,8 +1,7 @@
 package com.pagerduty.scheduler.dao
 
 import com.netflix.astyanax.{ Cluster, Keyspace }
-import com.pagerduty.eris.custom.ErisPdSettings
-import com.pagerduty.eris.dao.DaoFixture
+import com.pagerduty.eris.dao._
 import com.pagerduty.scheduler.model.{ CompletionResult, TaskAttempt, TaskKey }
 import com.pagerduty.scheduler.specutil.TaskFactory
 import com.pagerduty.specutil.TestTimer
@@ -19,7 +18,7 @@ class AttemptHistoryDaoSpec
   type FixtureParam = AttemptHistoryDaoImpl
   val columnTtl = 2.seconds
   override protected def mkFixtureDao(cluster: Cluster, keyspace: Keyspace): FixtureParam = {
-    new AttemptHistoryDaoImpl(cluster, keyspace, new ErisPdSettings, columnTtl)
+    new AttemptHistoryDaoImpl(cluster, keyspace, new ErisSettings, columnTtl)
   }
   val limit = 100
   val partitionId = 5
