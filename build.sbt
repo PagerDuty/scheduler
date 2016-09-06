@@ -71,12 +71,12 @@ lazy val common = (project in file("common")).
       "com.pagerduty" %% "metrics-api" % "1.2.1",
       "org.json4s"   %% "json4s-jackson" % "3.3.0",
       "com.twitter" %% "util-core" % "6.22.2",
-      "ch.qos.logback" % "logback-classic" % "1.1.3",
       "org.slf4j" % "slf4j-api" % "1.7.13",
       "org.slf4j" % "jul-to-slf4j" % "1.7.13",
       "org.apache.kafka" % "kafka-clients" % "0.9.0.1",
       "org.scalatest" %% "scalatest" % "2.2.6" % "test",
-      "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
+      "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
+      "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
     )
   )
 
