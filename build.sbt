@@ -39,10 +39,11 @@ lazy val bintraySettings = Seq(
 )
 
 // Dependencies:
-//   scheduler and scala-api are both top-level dependencies which can be mixed in into other
-//   projects (one or both, depending on whether the project provides its own interface to
-//   its underlying scheduler). Common has code that both depend on. As the scheduler integration
-//   tests need to enqueue, they depend on the api module as well.
+//   - scheduler and scala-api are both top-level dependencies which can be mixed in to other
+//     projects (one or both, depending on whether the project provides its own interface to
+//     its underlying scheduler)
+//   - common has code that both depend on
+//   - httpAdmin is an optional administrative HTTP interface
 lazy val sharedSettings = Seq(
   organization := "com.pagerduty",
   scalaVersion := "2.11.7",
