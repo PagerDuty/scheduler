@@ -1,17 +1,3 @@
-publishArtifact in Test := true
-
-parallelExecution in IntegrationTest := false
-
-unmanagedSourceDirectories in IntegrationTest +=
-  baseDirectory.value / "src/test/scala/com/pagerduty/scheduler/specutil"
-
-testOptions in IntegrationTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD")
-
-resolvers in ThisBuild := Seq(
-  "bintray-pagerduty-oss-maven" at "https://dl.bintray.com/pagerduty/oss-maven",
-  Resolver.defaultLocal
-)
-
 lazy val bintraySettings = Seq(
   bintrayOrganization := Some("pagerduty"),
   bintrayRepository := "oss-maven",
@@ -60,7 +46,14 @@ lazy val bintraySettings = Seq(
 lazy val sharedSettings = Seq(
   organization := "com.pagerduty",
   scalaVersion := "2.11.7",
-  crossScalaVersions := Seq("2.10.4", "2.11.7")
+  crossScalaVersions := Seq("2.10.4", "2.11.7"),
+  testOptions in IntegrationTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
+  publishArtifact in Test := true,
+  parallelExecution in IntegrationTest := false,
+  resolvers := Seq(
+    "bintray-pagerduty-oss-maven" at "https://dl.bintray.com/pagerduty/oss-maven",
+    Resolver.defaultLocal
+  )
 ) ++ bintraySettings
 
 lazy val common = (project in file("common")).
@@ -68,6 +61,7 @@ lazy val common = (project in file("common")).
   settings(
     name := "scheduler-common",
     libraryDependencies ++= Seq(
+      "com.pagerduty" %% "eris-core" % "2.0.4" exclude("org.slf4j", "slf4j-log4j12"),
       "com.pagerduty" %% "metrics-api" % "1.2.1",
       "org.json4s"   %% "json4s-jackson" % "3.3.0",
       "com.twitter" %% "util-core" % "6.22.2",
@@ -88,21 +82,22 @@ lazy val scalaApi = (project in file("scala-api")).
     libraryDependencies ++= Seq(
       "com.pagerduty" %% "metrics-api" % "1.2.1",
       "org.scalatest" %% "scalatest" % "2.2.6" % "test",
-      "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
+      "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
+      "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
     )
   )
 
-lazy val root = (project in file(".")).
-  dependsOn(common).
+lazy val scheduler = (project in file("scheduler")).
+  dependsOn(common % "it,test->test;compile->compile").
   dependsOn(scalaApi % "it").
-  aggregate(common, scalaApi).
   configs(IntegrationTest).
   settings(sharedSettings: _*).
   settings(Defaults.itSettings: _*).
   settings(
     name := "scheduler",
+    unmanagedSourceDirectories in IntegrationTest +=
+      baseDirectory.value / "src/test/scala/com/pagerduty/scheduler/specutil",
     libraryDependencies ++= {
-      val scalatraVersion = "2.4.0"
       val kafkaConsumerVersion = "0.3.2"
       Seq(
         "com.pagerduty" %% "metrics-api" % "1.2.1",
@@ -112,17 +107,38 @@ lazy val root = (project in file(".")).
         "com.pagerduty" %% "kafka-consumer-test-support" % kafkaConsumerVersion  exclude("org.slf4j", "slf4j-simple"),
         "com.typesafe.akka" %% "akka-actor" % "2.3.14",
         "com.typesafe.akka" %% "akka-slf4j" % "2.3.14",
-        "org.scalatra" %% "scalatra-json" % scalatraVersion,
-        "org.scalatra" %% "scalatra" % scalatraVersion,
-        "org.eclipse.jetty" % "jetty-webapp" % "9.2.15.v20160210" % "compile",
-        "org.scalatra" %% "scalatra-json" % scalatraVersion,
-        "org.json4s"   %% "json4s-jackson" % "3.3.0",
         "com.typesafe.akka" %% "akka-testkit" % "2.3.14" % "it,test",
         "org.scalactic" %% "scalactic" % "2.2.6" % "it,test",
         "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "it,test",
         "org.scalatest" %% "scalatest" % "2.2.6" % "it,test",
-        "org.scalatra" %% "scalatra-scalatest" % scalatraVersion % "test",
-        "org.scalaj" %% "scalaj-http" % "2.3.0" % "it"
+        "ch.qos.logback" % "logback-classic" % "1.1.3" % "it,test"
       )
     })
 
+lazy val httpAdmin = (project in file("http-admin")).
+  dependsOn(common % "test->test;compile->compile").
+  dependsOn(scheduler % "it->it;test->test;compile->compile").
+  configs(IntegrationTest).
+  settings(sharedSettings: _*).
+  settings(Defaults.itSettings: _*).
+  settings(
+    name := "scheduler-http-admin",
+    libraryDependencies ++= {
+      val scalatraVersion = "2.4.0"
+      Seq(
+        "org.scalatra" %% "scalatra-json" % scalatraVersion,
+        "org.scalatra" %% "scalatra" % scalatraVersion,
+        "org.scalatra" %% "scalatra-json" % scalatraVersion,
+        "org.eclipse.jetty" % "jetty-webapp" % "9.2.15.v20160210" % "compile",
+        "org.scalatra" %% "scalatra-scalatest" % scalatraVersion % "test",
+        "org.scalatest" %% "scalatest" % "2.2.6" % "test",
+        "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
+        "org.scalaj" %% "scalaj-http" % "2.3.0" % "it",
+        "ch.qos.logback" % "logback-classic" % "1.1.3" % "it,test"
+      )
+    }
+  )
+
+lazy val root = (project in file(".")).settings(
+    publish := { }
+  ).aggregate(common, scalaApi, scheduler, httpAdmin)
