@@ -1,8 +1,3 @@
-//resolvers in ThisBuild := Seq(
-//  "bintray-pagerduty-oss-maven" at "https://dl.bintray.com/pagerduty/oss-maven",
-//  Resolver.defaultLocal
-//)
-
 lazy val bintraySettings = Seq(
   bintrayOrganization := Some("pagerduty"),
   bintrayRepository := "oss-maven",
@@ -143,3 +138,7 @@ lazy val httpAdmin = (project in file("http-admin")).
       )
     }
   )
+
+lazy val root = (project in file(".")).settings(
+    publish := { }
+  ).aggregate(common, scalaApi, scheduler, httpAdmin)
