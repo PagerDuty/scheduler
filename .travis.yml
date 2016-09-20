@@ -14,6 +14,14 @@ scala:
   - 2.11.7
 jdk:
   - oraclejdk7
+  - oraclejdk8
+env:
+  - CASS=cassandra
+  - CASS=cassandra3
+matrix:
+  exclude:
+  - env: CASS=cassandra3
+    jdk: oraclejdk7
 sudo: required
 dist: trusty
 cache:
@@ -24,7 +32,7 @@ cache:
 before_install:
   - curl https://raw.githubusercontent.com/PagerDuty/pd-travis-deps/master/zookeeper | /bin/sh
   - curl https://raw.githubusercontent.com/PagerDuty/pd-travis-deps/master/kafka | /bin/sh
-  - curl https://raw.githubusercontent.com/PagerDuty/pd-travis-deps/master/cassandra | /bin/sh
+  - curl https://raw.githubusercontent.com/PagerDuty/pd-travis-deps/master/$CASS | /bin/sh
   - cd $TRAVIS_BUILD_DIR
   - mkdir ~/.sbt
   - cp .travisci/credentials.sbt ~/.sbt
