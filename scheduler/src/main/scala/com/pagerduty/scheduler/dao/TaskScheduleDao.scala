@@ -10,7 +10,7 @@ import com.pagerduty.eris.serializers._
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{ Task, TaskKey }
 import com.pagerduty.widerow.{ Bound, EntryColumn }
-import com.twitter.util.Time
+import java.time.Instant
 import scala.concurrent.Future
 
 trait TaskScheduleDao {
@@ -35,7 +35,7 @@ trait TaskScheduleDao {
    * @param limit maximum number of results
    * @return
    */
-  def load(partitionId: PartitionId, from: TaskKey, to: Time, limit: Int): Future[IndexedSeq[Task]]
+  def load(partitionId: PartitionId, from: TaskKey, to: Instant, limit: Int): Future[IndexedSeq[Task]]
 
   def find(partitionId: PartitionId, key: TaskKey): Future[Option[Task]]
 
@@ -46,7 +46,7 @@ trait TaskScheduleDao {
    * @param to
    * @return A map which links PartitionId -> IndexedSeq[Task] for the given partitions
    */
-  def loadTasksFromPartitions(partitionIds: Set[PartitionId], from: Time, to: Time,
+  def loadTasksFromPartitions(partitionIds: Set[PartitionId], from: Instant, to: Instant,
     limitPerPartition: Int): Future[Map[PartitionId, IndexedSeq[Task]]] = {
     loadTasksFromPartitions(
       partitionIds,
@@ -60,10 +60,10 @@ trait TaskScheduleDao {
 
   def loadTasksFromPartitions(
     partitionIds: Set[PartitionId],
-    from: Time,
+    from: Instant,
     fromOrderingId: Option[Task.OrderingId],
     fromUniquenessKey: Option[Task.UniquenessKey],
-    to: Time,
+    to: Instant,
     limitPerPartition: Int
   ): Future[Map[PartitionId, IndexedSeq[Task]]]
 
@@ -75,7 +75,7 @@ trait TaskScheduleDao {
    * @param limitPerPartition the max count of tasks that can be returned per partition
    * @return
    */
-  def getTotalTaskCount(partitions: Set[PartitionId], from: Time, to: Time,
+  def getTotalTaskCount(partitions: Set[PartitionId], from: Instant, to: Instant,
     limitPerPartition: Int): Future[Int]
 
 }
@@ -125,23 +125,23 @@ class TaskScheduleDaoImpl(
     scheduleIndex(rowKey).queueRemove(taskKey).executeAsync()
   }
 
-  def load(partitionId: PartitionId, from: TaskKey, to: Time, limit: Int): Future[IndexedSeq[Task]] = {
+  def load(partitionId: PartitionId, from: TaskKey, to: Instant, limit: Int): Future[IndexedSeq[Task]] = {
     load(partitionId, from.scheduledTime, Some(from.orderingId), Some(from.uniquenessKey), to, limit)
   }
 
-  def load(partitionId: PartitionId, from: Time, to: Time, limit: Int): Future[IndexedSeq[Task]] = {
+  def load(partitionId: PartitionId, from: Instant, to: Instant, limit: Int): Future[IndexedSeq[Task]] = {
     load(partitionId, from, None, None, to, limit)
   }
 
   def load(
     partitionId: PartitionId,
-    from: Time,
+    from: Instant,
     fromOrderingId: Option[Task.OrderingId],
     fromUniquenessKey: Option[Task.UniquenessKey],
-    to: Time,
+    to: Instant,
     limit: Int
   ): Future[IndexedSeq[Task]] = {
-    require(from < to, "`from` time must be less than `to`")
+    require(from.compareTo(to) < 0, "`from` time must be less than `to`")
     val rowKeys = getRowKeysExclusive(partitionId, from, to)
     val fromBound = Bound(TaskKey.lowerBound(from, fromOrderingId, fromUniquenessKey))
     val toBound = Bound(TaskKey.lowerBound(to), inclusive = false)
@@ -164,20 +164,20 @@ class TaskScheduleDaoImpl(
 
   def loadTasksFromPartitions(
     partitionIds: Set[PartitionId],
-    from: Time,
+    from: Instant,
     fromOrderingId: Option[Task.OrderingId],
     fromUniquenessKey: Option[Task.UniquenessKey],
-    to: Time,
+    to: Instant,
     limitPerPartition: Int
   ): Future[Map[PartitionId, IndexedSeq[Task]]] = {
     val results = Map[PartitionId, IndexedSeq[Task]]()
 
     def recursivelyLoadTasks(
       partitionIds: Set[PartitionId],
-      from: Time,
+      from: Instant,
       fromOrderingId: Option[Task.OrderingId],
       fromUniquenessKey: Option[Task.UniquenessKey],
-      to: Time,
+      to: Instant,
       limitPerPartition: Int,
       results: Map[PartitionId, IndexedSeq[Task]]
     ): Future[Map[PartitionId, IndexedSeq[Task]]] = {
@@ -204,7 +204,7 @@ class TaskScheduleDaoImpl(
       limitPerPartition, results)
   }
 
-  private def getTaskCount(partitionId: PartitionId, from: Time, to: Time, limit: Int): Future[Int] = {
+  private def getTaskCount(partitionId: PartitionId, from: Instant, to: Instant, limit: Int): Future[Int] = {
     val rowKeys = getRowKeysExclusive(partitionId, from, to)
     val columnFamilyModel = scheduleIndex.columnFamilyModel
     val timeRange =
@@ -230,9 +230,9 @@ class TaskScheduleDaoImpl(
     builder.build()
   }
 
-  def getTotalTaskCount(partitions: Set[PartitionId], from: Time, to: Time,
+  def getTotalTaskCount(partitions: Set[PartitionId], from: Instant, to: Instant,
     limitPerPartition: Int): Future[Int] = {
-    require(from < to, "`from` time must be less than `to`")
+    require(from.compareTo(to) < 0, "`from` time must be less than `to`")
     val taskCountPerPartition = partitions.toSeq.map(getTaskCount(_, from, to, limitPerPartition))
     Future.fold(taskCountPerPartition)(0) { _ + _ }
   }

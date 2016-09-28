@@ -7,8 +7,7 @@ import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{ TaskAttempt, TaskKey }
 import com.pagerduty.widerow.{ Bound, EntryColumn }
-import com.twitter.util.{ Duration, Time }
-import com.twitter.conversions.time._
+import scala.concurrent.duration._
 import scala.concurrent.Future
 
 trait AttemptHistoryDao {
@@ -60,7 +59,7 @@ class AttemptHistoryDaoImpl(
   def insert(partitionId: PartitionId, taskKey: TaskKey, taskAttempt: TaskAttempt): Future[Unit] = {
     val columnName = (taskKey, taskAttempt.attemptNumber)
     attemptsMap(makeRowKey(partitionId, taskKey))
-      .queueInsert(EntryColumn(columnName, taskAttempt, Some(columnTtl.inSeconds)))
+      .queueInsert(EntryColumn(columnName, taskAttempt, Some(columnTtl.toSeconds.toInt)))
       .executeAsync()
   }
 

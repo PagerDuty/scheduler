@@ -2,15 +2,14 @@ package com.pagerduty.scheduler.akka
 
 import akka.testkit._
 import com.pagerduty.eris.TimeUuid
+import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.akka.PartitionExecutor.ExecutePartitionTask
-import com.pagerduty.scheduler.{ Scheduler, scalaDurationToTwitter }
+import com.pagerduty.scheduler.datetimehelpers._
+import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import java.time.Instant
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.concurrent.Eventually
-
 import scala.concurrent.duration._
-import com.twitter.util.Time
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
-
 import scala.language.postfixOps
 
 class PartitionSchedulerSpec extends ActorPathFreeSpec("PartitionSchedulerSpec")
@@ -41,7 +40,7 @@ class PartitionSchedulerSpec extends ActorPathFreeSpec("PartitionSchedulerSpec")
     }
 
     "dispatch tasks due in the future later" in {
-      val tasks = TaskFactory.makeTasks(2, scheduledTime = Time.now + 1.second)
+      val tasks = TaskFactory.makeTasks(2, scheduledTime = Instant.now() + 1.second)
       scheduler ! ScheduleTasks(tasks)
 
       partitionExecutorProbe.expectNoMsg(900 millis)
@@ -58,17 +57,17 @@ class PartitionSchedulerSpec extends ActorPathFreeSpec("PartitionSchedulerSpec")
     }
 
     "correctly merge incoming tasks" in {
-      val tasks2 = TaskFactory.makeTasks(2, scheduledTime = Time.now + 2.second)
+      val tasks2 = TaskFactory.makeTasks(2, scheduledTime = Instant.now() + 2.seconds)
       scheduler ! ScheduleTasks(tasks2)
 
-      val tasks1 = TaskFactory.makeTasks(2, scheduledTime = Time.now + 1.second)
+      val tasks1 = TaskFactory.makeTasks(2, scheduledTime = Instant.now() + 1.second)
       scheduler ! ScheduleTasks(tasks1)
 
       scheduler.underlyingActor.pendingTasks.values.toSeq shouldEqual (tasks1 ++ tasks2)
     }
 
     "overwrite tasks with the same key" in {
-      val originalTask = TaskFactory.makeTask(scheduledTime = Time.now + 2.second)
+      val originalTask = TaskFactory.makeTask(scheduledTime = Instant.now() + 2.seconds)
       val modifiedTask = originalTask.copy(taskData = Map("id" -> TimeUuid().toString))
       scheduler ! ScheduleTasks(Seq(originalTask))
       scheduler ! ScheduleTasks(Seq(modifiedTask))
@@ -80,7 +79,7 @@ class PartitionSchedulerSpec extends ActorPathFreeSpec("PartitionSchedulerSpec")
       expectMsg(ThroughputController.InProgressTaskCountFetched(0))
 
       val taskCount = 2
-      val tasks = TaskFactory.makeTasks(taskCount, scheduledTime = Time.now + 1.second)
+      val tasks = TaskFactory.makeTasks(taskCount, scheduledTime = Instant.now() + 1.second)
       scheduler ! ScheduleTasks(tasks)
       scheduler ! ThroughputController.FetchInProgressTaskCount
       expectMsg(ThroughputController.InProgressTaskCountFetched(taskCount))

@@ -1,17 +1,19 @@
 package com.pagerduty.scheduler.dao
 
-import org.scalatest.time.{Seconds, Span}
 import scala.util.Random
 import com.netflix.astyanax.{Cluster, Keyspace}
 import com.pagerduty.eris.dao._
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{CompletionResult, Task, TaskKey, TaskStatus}
 import com.pagerduty.scheduler.specutil.TaskFactory
 import com.pagerduty.scheduler.specutil.TestTimer
-import com.twitter.conversions.time._
-import com.twitter.util.Time
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import org.scalatest.{MustMatchers, fixture}
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Seconds, Span}
+import scala.concurrent.duration._
 
 class TaskStatusDaoSpec
     extends fixture.WordSpec with MustMatchers with DaoFixture with TestTimer with ScalaFutures {
@@ -38,7 +40,7 @@ class TaskStatusDaoSpec
       val persistedTaskKeys = dao.loadPlusMinusOneSecondFrom(task)
       persistedTaskKeys mustEqual Seq(task.taskKey)
 
-      Thread.sleep(columnTtl.inMilliseconds) // wait for TTL to expire
+      Thread.sleep(columnTtl.toMillis) // wait for TTL to expire
 
       dao.loadPlusMinusOneSecondFrom(task) mustBe empty
     }
@@ -104,7 +106,7 @@ class TaskStatusDaoSpec
 
     "insert incomplete task status" in { dao =>
       val task = TaskFactory.makeTask()
-      val nextAttemptAt = Some(Time.now.floor(1.millisecond))
+      val nextAttemptAt = Some(Instant.now().truncatedTo(ChronoUnit.MILLIS))
       val status = TaskStatus(2, CompletionResult.Incomplete, nextAttemptAt)
       dao.insert(partitionId, task.taskKey, status).futureValue
       val persistedTaskEntries = dao.loadPlusMinusOneSecondWithStatusFrom(task)

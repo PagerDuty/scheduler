@@ -1,9 +1,9 @@
 package com.pagerduty.scheduler
 
 import com.pagerduty.metrics.Metrics
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task
-import com.twitter.conversions.time._
-import com.twitter.util.Time
+import java.time.Instant
 import java.util
 import java.util.concurrent.{ ExecutionException, TimeUnit, Future => JFuture }
 import org.apache.kafka.clients.producer._
@@ -11,6 +11,7 @@ import org.apache.kafka.common.{ Metric, MetricName, PartitionInfo, TopicPartiti
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{ Matchers, WordSpecLike }
 import org.scalatest.concurrent.ScalaFutures
+import scala.concurrent.duration._
 
 class SchedulerClientSpec extends WordSpecLike with Matchers with ScalaFutures with MockFactory {
   val schedulingGraceWindow = 42.seconds
@@ -85,7 +86,7 @@ class SchedulerClientSpec extends WordSpecLike with Matchers with ScalaFutures w
     }
 
     "scheduling a task that is too old to be scheduled" should {
-      val task = Task.example.copy(scheduledTime = Time.now - schedulingGraceWindow - 1.second)
+      val task = Task.example.copy(scheduledTime = Instant.now() - (schedulingGraceWindow + 1.second))
 
       "return a failed future" in new LocalVals {
         schedulerClient.scheduleTask(task).failed.futureValue shouldBe an[Exception]

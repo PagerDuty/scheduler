@@ -65,7 +65,6 @@ lazy val common = (project in file("common")).
       "com.pagerduty" %% "eris-core" % "2.0.4" exclude("org.slf4j", "slf4j-log4j12"),
       "com.pagerduty" %% "metrics-api" % "1.2.1",
       "org.json4s"   %% "json4s-jackson" % "3.3.0",
-      "com.twitter" %% "util-core" % "6.22.2",
       "org.slf4j" % "slf4j-api" % "1.7.13",
       "org.slf4j" % "jul-to-slf4j" % "1.7.13",
       "org.apache.kafka" % "kafka-clients" % "0.9.0.1",

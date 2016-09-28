@@ -1,13 +1,12 @@
 package com.pagerduty.scheduler.akka
 
 import akka.testkit.{ TestFSMRef, TestProbe }
-import com.pagerduty.scheduler._
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.dao.TaskScheduleDao
 import com.pagerduty.scheduler.model.{ Task, TaskKey }
 import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
-import com.twitter.util.Time
+import java.time.Instant
 import org.scalamock.scalatest.PathMockFactory
-
 import scala.concurrent.{ Future, Promise }
 import scala.concurrent.duration._
 
@@ -79,7 +78,7 @@ class TaskPersistenceSpec extends ActorPathFreeSpec("TaskPersistenceSpec") with 
     "notify about load failures" in {
       val exception = new RuntimeException("Simulated exception")
       (taskScheduleDao.load _).stubs(*, *, *, *).returns(Future.failed(exception))
-      taskPersistence ! LoadTasks(Time.now, limit = 1000)
+      taskPersistence ! LoadTasks(Instant.now(), limit = 1000)
       throughputController.expectMsg(TaskPersistence.TasksNotLoaded(exception))
     }
 

@@ -2,11 +2,12 @@ package com.pagerduty.scheduler
 
 import com.pagerduty.metrics.Metrics
 import com.pagerduty.scheduler.model.{ Task, TaskKey }
-import com.twitter.util.{ Duration, Time }
+import java.time.Instant
 import java.net.InetAddress
 import org.apache.kafka.clients.producer.{ Callback, Producer, ProducerRecord, RecordMetadata }
 import org.slf4j.{ Logger, LoggerFactory }
 import scala.concurrent.{ Future, Promise }
+import scala.concurrent.duration.{ Duration, FiniteDuration }
 import scala.util.control.NonFatal
 
 /**
@@ -33,7 +34,8 @@ class SchedulerClient(
    *         scheduling results in an eventually failed future.
    */
   def scheduleTask(task: Task): Future[Unit] = {
-    if (Time.now - task.scheduledTime > schedulingGraceWindow) {
+    val timeDiff = Duration.fromNanos(java.time.Duration.between(task.scheduledTime, Instant.now()).toNanos)
+    if (timeDiff > schedulingGraceWindow) {
       Future.failed(new IllegalArgumentException("Attempting to enqueue too far in the past."))
     } else {
       val future = doScheduleTask(task)

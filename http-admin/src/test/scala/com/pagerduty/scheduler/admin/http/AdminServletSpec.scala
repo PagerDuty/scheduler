@@ -1,18 +1,19 @@
 package com.pagerduty.scheduler.admin.http
 
 import com.pagerduty.metrics.Metrics
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.admin.AdminService
 import com.pagerduty.scheduler.admin.model.{ AdminTask, TaskDetails }
 import com.pagerduty.scheduler.model.{ CompletionResult, Task, TaskAttempt, TaskKey }
 import com.pagerduty.scheduler.specutil.TaskFactory
 import com.pagerduty.scheduler.{ Scheduler, SchedulerSettings }
-import com.twitter.conversions.time._
-import com.twitter.util.{ Time, TimeFormat }
 import com.typesafe.config.ConfigFactory
+import java.time.format.DateTimeFormatter
+import java.time.{ Instant, ZoneOffset }
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpecLike
 import org.scalatra.test.scalatest.ScalatraSuite
-
+import scala.concurrent.duration._
 import scala.concurrent.Future
 
 class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory {
@@ -26,7 +27,7 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
   "AdminServlet" - {
     val namespace = "/api/v1"
     val timeFormatPattern = TaskKey.ScheduledTimeFormat
-    val timeFormat = new TimeFormat(timeFormatPattern)
+    val timeFormat = DateTimeFormatter.ofPattern(timeFormatPattern).withZone(ZoneOffset.UTC)
 
     "should handle a GET to /status" in {
       get(s"$namespace/status") {
@@ -37,10 +38,10 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
 
     "should handle a GET to /task" - {
       "when given a valid key" - {
-        val key = TaskKey(Time.now, "orderingId", "uniquenessKey")
+        val key = TaskKey(Instant.now(), "orderingId", "uniquenessKey")
 
         "and the task is fetched successfully" in {
-          val start = Time.now
+          val start = Instant.now()
           val finish = start + 1.second
           val updateAt = finish + 1.second
 
@@ -117,9 +118,9 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
 
     "should handle a GET to /tasks" - {
       val fromString = "2016-04-07T01:00:00.000Z"
-      val from = timeFormat.parse(fromString)
+      val from = Instant.parse(fromString)
       val toString = "2016-04-07T02:00:00.000Z"
-      val to = timeFormat.parse(toString)
+      val to = Instant.parse(toString)
 
       val limit = 10
       val limitString = limit.toString
@@ -150,10 +151,10 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
 
         "and the fetch succeeds" in {
           (mockAdminService.fetchIncompleteTasks(
-            _: Time,
+            _: Instant,
             _: Option[Task.OrderingId],
             _: Option[Task.UniquenessKey],
-            _: Time,
+            _: Instant,
             _: Int
           )).expects(from, None, None, to, limit)
             .returns(Future.successful(List(task)))
@@ -169,10 +170,10 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
           val fromUniquenessKeyString = "uniquenessKey"
 
           (mockAdminService.fetchIncompleteTasks(
-            _: Time,
+            _: Instant,
             _: Option[Task.OrderingId],
             _: Option[Task.UniquenessKey],
-            _: Time,
+            _: Instant,
             _: Int
           )).expects(
               from,
@@ -199,10 +200,10 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
 
         "and the fetch fails" in {
           (mockAdminService.fetchIncompleteTasks(
-            _: Time,
+            _: Instant,
             _: Option[Task.OrderingId],
             _: Option[Task.UniquenessKey],
-            _: Time,
+            _: Instant,
             _: Int
           )).expects(from, None, None, to, limit)
             .returns(Future.failed(new Exception("test")))
@@ -223,7 +224,7 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
       "when given an unparseable date" in {
         get(s"$namespace/tasks", Seq("from" -> "asdf", "to" -> toString, "limit" -> limitString)) {
           status should equal(400)
-          body should include("Unparseable date")
+          body should include("could not be parsed")
         }
       }
 
@@ -250,7 +251,7 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
       }
 
       "when given a valid key" - {
-        val key = TaskKey(Time.now, "orderingId", "uniquenessKey")
+        val key = TaskKey(Instant.now(), "orderingId", "uniquenessKey")
 
         "and no JSON body" in {
           put(s"$namespace/task?key=$key") {

@@ -1,17 +1,16 @@
 package com.pagerduty.scheduler.admin.http
 
-import java.util.NoSuchElementException
-import java.util.concurrent.Executors
-
 import com.pagerduty.scheduler.admin.AdminService
 import com.pagerduty.scheduler.admin.model._
 import com.pagerduty.scheduler.model.{ CompletionResult, Task, TaskKey }
-import com.twitter.util.{ Time, TimeFormat }
+import java.time.format.DateTimeFormatter
+import java.time.{ Instant, ZoneOffset }
+import java.util.NoSuchElementException
+import java.util.concurrent.Executors
 import org.json4s.{ DefaultFormats, Formats }
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.slf4j.LoggerFactory
-
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
 import scala.util.{ Failure, Success, Try }
@@ -48,7 +47,7 @@ class AdminServlet(
   private val apiPath = s"/api/${VersionString}"
 
   get(s"$apiPath/status") {
-    logResponse(Ok(GetStatusResponse(s"Scheduler Admin API is running! The time is: ${Time.now}")))
+    logResponse(Ok(GetStatusResponse(s"Scheduler Admin API is running! The time is: ${Instant.now()}")))
   }
 
   get(s"$apiPath/task") {
@@ -73,7 +72,7 @@ class AdminServlet(
       from <- parseTime(fromString)
       to <- parseTime(toString)
       limit <- Try(limitString.toInt)
-      _ <- Try(require(from < to, "'from' must be before 'to'"))
+      _ <- Try(require(from.compareTo(to) < 0, "'from' must be before 'to'"))
     } yield adminService.fetchIncompleteTasks(from, fromOrderingId, fromUniquenessKey, to, limit)
 
     paramParsing match {
@@ -146,8 +145,8 @@ class AdminServlet(
     Future.successful(logResponse(BadRequest(response)))
   }
 
-  private def parseTime(time: String): Try[Time] = {
-    Try(AdminServlet.TimeFormat.parse(time))
+  private def parseTime(timeStr: String): Try[Instant] = {
+    Try(Instant.parse(timeStr))
   }
 
   // it would be better to do this in an `after` callback, but it seems Scalatra might have a bug
@@ -162,5 +161,5 @@ class AdminServlet(
 object AdminServlet {
   val VersionString = "v1"
   val TimeFormatPattern = TaskKey.ScheduledTimeFormat // use the same format for consistency
-  val TimeFormat = new TimeFormat(TimeFormatPattern)
+  val TimeFormat = DateTimeFormatter.ofPattern(TimeFormatPattern).withZone(ZoneOffset.UTC)
 }

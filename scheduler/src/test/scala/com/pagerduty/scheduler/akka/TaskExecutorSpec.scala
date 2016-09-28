@@ -1,13 +1,13 @@
 package com.pagerduty.scheduler.akka
 
-import com.twitter.util.Time
-import scala.concurrent.duration._
-import scala.concurrent.Future
 import akka.testkit.{ TestFSMRef, TestProbe }
 import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.model._
-import org.scalamock.scalatest.PathMockFactory
 import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import org.scalamock.scalatest.PathMockFactory
+import java.time.Instant
+import scala.concurrent.duration._
+import scala.concurrent.Future
 
 class TaskExecutorSpec
     extends ActorPathFreeSpec("TaskExecutorSpec")
@@ -96,7 +96,7 @@ class TaskExecutorSpec
             case UpdateTaskStatus(`taskKey`, TaskStatus(1, CompletionResult.Incomplete, _)) =>
             // accept
           }
-          val attemptUpdate = TaskStatus(1, CompletionResult.Incomplete, Some(Time.now))
+          val attemptUpdate = TaskStatus(1, CompletionResult.Incomplete, Some(Instant.now()))
           taskExecutor ! TaskStatusUpdated(task.taskKey, attemptUpdate)
 
           // task automatically is retried, and will succeed the second time

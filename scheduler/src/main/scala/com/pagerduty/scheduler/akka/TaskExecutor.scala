@@ -1,11 +1,10 @@
 package com.pagerduty.scheduler.akka
 
 import akka.actor.{ ActorRef, Props }
-import com.twitter.util.Time
-import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.akka.TaskStatusTracker._
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model._
-
+import java.time.Instant
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
 
@@ -32,7 +31,7 @@ import scala.util.{ Failure, Success }
 object TaskExecutor {
   private case object ExecutionThreadSuccess
   private case class ExecutionThreadFailed(throwable: Throwable)
-  private case class AttemptTask(attemptNumber: Int, attemptAt: Time)
+  private case class AttemptTask(attemptNumber: Int, attemptAt: Instant)
 
   sealed trait State
   case object CheckingTaskStatus extends State
@@ -43,9 +42,9 @@ object TaskExecutor {
 
   sealed trait Data
   case object NoData extends Data
-  case class ExecutingData(attemptNumber: Int, startedAt: Time) extends Data
+  case class ExecutingData(attemptNumber: Int, startedAt: Instant) extends Data
   case class AttemptData(
-    startedAt: Time, finishedAt: Time, exception: Option[Throwable]
+    startedAt: Instant, finishedAt: Instant, exception: Option[Throwable]
   ) extends Data
 
   def props(
@@ -157,21 +156,21 @@ class TaskExecutor(
     stop()
   }
 
-  private def nextAttempt(attemptNumber: Int, nextAttemptAt: Option[Time]): State = {
+  private def nextAttempt(attemptNumber: Int, nextAttemptAt: Option[Instant]): State = {
     val attemptAt = nextAttemptAt.getOrElse(task.scheduledTime)
-    val attemptDelay = (attemptAt - Time.now).toScalaDuration.max(0.seconds)
+    val attemptDelay = java.time.Duration.between(Instant.now(), attemptAt).toScalaDuration.max(0.seconds)
     context.system.scheduler.scheduleOnce(attemptDelay, self, AttemptTask(attemptNumber, attemptAt))
     goto(AwaitingTaskAttempt) using NoData
   }
 
   private def updateTaskAsSuccessful(data: ExecutingData): State = {
     val taskStatus = TaskStatus(data.attemptNumber, CompletionResult.Success, nextAttemptAt = None)
-    val attemptData = AttemptData(data.startedAt, finishedAt = Time.now, exception = None)
+    val attemptData = AttemptData(data.startedAt, finishedAt = Instant.now(), exception = None)
     updateTaskStatus(taskStatus, attemptData)
   }
 
   private def updateTaskStatusThenRetry(data: ExecutingData, exception: Throwable): State = {
-    val finishedAt = Time.now
+    val finishedAt = Instant.now()
     val nextAttemptNumber = data.attemptNumber + 1
     val retryAt = finishedAt + jitteredWaitForRetry(nextAttemptNumber, settings, util.Random.nextDouble)
     val taskStatus = TaskStatus(data.attemptNumber, CompletionResult.Incomplete, Some(retryAt))
@@ -182,7 +181,7 @@ class TaskExecutor(
   private def updateTaskAsFailed(data: ExecutingData, exception: Throwable): State = {
     logging.reportMaxTaskRetriesReached(task, partitionId)
     val taskStatus = TaskStatus(data.attemptNumber, CompletionResult.Failure, nextAttemptAt = None)
-    val attemptData = AttemptData(data.startedAt, finishedAt = Time.now, Some(exception))
+    val attemptData = AttemptData(data.startedAt, finishedAt = Instant.now(), Some(exception))
     updateTaskStatus(taskStatus, attemptData)
   }
 
@@ -196,9 +195,9 @@ class TaskExecutor(
     goto(RewritingTaskStatus) using NoData
   }
 
-  private def executeTask(attemptNumber: Int, attemptAt: Time): State = {
-    val startedAt = Time.now
-    logging.reportTaskExecutionDelay(partitionId, task, (startedAt - attemptAt).toScalaDuration)
+  private def executeTask(attemptNumber: Int, attemptAt: Instant): State = {
+    val startedAt = Instant.now()
+    logging.reportTaskExecutionDelay(partitionId, task, java.time.Duration.between(attemptAt, startedAt).toScalaDuration)
 
     val taskExecutionFuture = taskExecutorService.execute(partitionId, task)
     taskExecutionFuture onComplete {
@@ -225,7 +224,7 @@ class TaskExecutor(
       data.startedAt,
       data.finishedAt,
       taskResult = taskStatus.completionResult,
-      taskResultUpdatedAt = Time.now,
+      taskResultUpdatedAt = Instant.now(),
       data.exception
     )
   }

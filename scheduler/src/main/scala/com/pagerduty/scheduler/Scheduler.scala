@@ -2,19 +2,19 @@ package com.pagerduty.scheduler
 
 import com.netflix.astyanax.{ Cluster, Keyspace }
 import com.pagerduty.eris.dao.ErisSettings
+import com.pagerduty.kafkaconsumer.SimpleKafkaConsumer
+import com.pagerduty.metrics.Event.{ AlertType, Priority }
+import com.pagerduty.metrics.{ Event, Metrics }
 import com.pagerduty.scheduler.admin.AdminServiceImpl
 import com.pagerduty.scheduler.akka.FailureResponse
 import com.pagerduty.scheduler.dao._
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.gauge.{ Gauge, GaugeRunner, StaleTasksGauge }
-import com.pagerduty.metrics.Event.{ AlertType, Priority }
-import com.pagerduty.metrics.{ Event, Metrics }
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{ Task, TaskAttempt, TaskKey, TaskStatus }
-import com.twitter.util.Time
 import com.typesafe.config.Config
+import java.time.Instant
 import org.slf4j.{ Logger, LoggerFactory }
-import com.pagerduty.kafkaconsumer.SimpleKafkaConsumer
-
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, Future }
 import scala.util.control.NonFatal
@@ -154,7 +154,7 @@ object Scheduler {
 
     def reportConsistencyCheckException(message: String, t: Throwable): Unit
     def reportConsistencyCheckResults(
-      from: Time, to: Time,
+      from: Instant, to: Instant,
       totalEnqueued: Int, incompleteTasks: Seq[TaskKey]
     ): Unit
 
@@ -230,7 +230,7 @@ object Scheduler {
       taskAttempt: TaskAttempt
     ): Unit = {
       val tags = additionalTags(task, taskDataTagNames)
-      val executionDuration = (taskAttempt.finishedAt - taskAttempt.startedAt).toScalaDuration
+      val executionDuration = java.time.Duration.between(taskAttempt.startedAt, taskAttempt.finishedAt).toScalaDuration
       metrics.histogram("task_execution_duration", executionDuration.toMillis.toInt, tags: _*)
       attemptHistoryDao.foreach { dao =>
         dao.insert(partitionId, task.taskKey, taskAttempt)
@@ -246,7 +246,7 @@ object Scheduler {
     }
 
     def reportTaskRetry(taskKey: TaskKey, delay: Duration): Unit = {
-      val approximateTargetTime = Time.now + delay
+      val approximateTargetTime = Instant.now() + delay
       log.warn(s"Retrying $taskKey in $delay, at approximately $approximateTargetTime.")
     }
 
@@ -271,7 +271,7 @@ object Scheduler {
     }
 
     def reportConsistencyCheckResults(
-      from: Time, to: Time,
+      from: Instant, to: Instant,
       totalEnqueued: Int, incompleteTasks: Seq[TaskKey]
     ): Unit = {
       metrics.count("checker_total_enqueued", totalEnqueued)

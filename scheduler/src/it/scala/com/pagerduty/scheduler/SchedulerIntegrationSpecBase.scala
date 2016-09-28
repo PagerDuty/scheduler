@@ -1,11 +1,12 @@
 package com.pagerduty.scheduler
 
 import com.pagerduty.metrics.{Event, Metrics, NullMetrics}
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.specutil.CassandraIntegrationSpec
-import com.twitter.util.Time
 import com.typesafe.config.ConfigFactory
+import java.time.Instant
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, Matchers}
@@ -61,7 +62,7 @@ abstract class SchedulerIntegrationSpecBase
 
     // TODO Any operations on the mutable concurrent state represented by these vars must be in synchronized block.
     var executedTasks: List[Task] = Nil
-    var executedTaskTimes: List[Time] = Nil
+    var executedTaskTimes: List[Instant] = Nil
     var oopsedTasks: List[Task] = Nil
 
     def taskExecutorServiceFactory = SchedulerIntegrationSpecBase.simpleTestExecutorFactory(taskRunner)
@@ -96,12 +97,12 @@ abstract class SchedulerIntegrationSpecBase
     def tasksShouldRunNow(
       expectedTasks: List[Task], expectedOopsedTasks: List[Task] = Nil
     ): Unit = {
-      tasksShouldRunAt(expectedTasks, Time.now, expectedOopsedTasks, false)
+      tasksShouldRunAt(expectedTasks, Instant.now(), expectedOopsedTasks, false)
     }
 
-    def noTasksRunBy(by: Time): Unit = {
+    def noTasksRunBy(by: Instant): Unit = {
       executedTasks shouldBe Nil
-      val sleepForMillis = (by - Time.now + taskLateByMax).inMillis
+      val sleepForMillis = java.time.Duration.between(Instant.now() + taskLateByMax, by).toMillis
       if (sleepForMillis > 0) {
         Thread.sleep(sleepForMillis)
       }
@@ -110,7 +111,7 @@ abstract class SchedulerIntegrationSpecBase
 
     def tasksShouldRunAt(
       expectedTasks: List[Task],
-      expectedAt: Time,
+      expectedAt: Instant,
       expectedOopsedTasks: List[Task] = Nil,
       checkTaskTimes: Boolean = true
     ): Unit = {
@@ -121,13 +122,13 @@ abstract class SchedulerIntegrationSpecBase
     }
 
     def tasksShouldConditionBy(
-      shouldBy: Time,
+      shouldBy: Instant,
       checkTaskTimes: Boolean
     )(
       shouldCondition: => Unit
     ): Unit = {
       val timeoutAt = shouldBy + schedulerWarmUpOrSlowTestTimeout
-      val timeoutIn = (timeoutAt - Time.now).toScalaDuration.max(0.seconds)
+      val timeoutIn = java.time.Duration.between(Instant.now(), timeoutAt).toScalaDuration.max(0.seconds)
       try {
         eventually(timeout(timeoutIn)) {
           shouldCondition
@@ -140,9 +141,9 @@ abstract class SchedulerIntegrationSpecBase
       }
       if (checkTaskTimes) {
         executedTaskTimes.foreach { taskTime =>
-          val taskLateBy = (taskTime - shouldBy).inMillis
-          taskLateBy should be >= -taskEarlyByMax.inMillis
-          taskLateBy should be <= taskLateByMax.inMillis
+          val taskLateBy = java.time.Duration.between(shouldBy, taskTime).toScalaDuration.toMillis
+          taskLateBy should be >= -taskEarlyByMax.toMillis
+          taskLateBy should be <= taskLateByMax.toMillis
         }
       }
       executedTasks = Nil
@@ -152,7 +153,7 @@ abstract class SchedulerIntegrationSpecBase
 
     def taskRunner(task: Task): Unit = {
       executedTasks = task :: executedTasks
-      executedTaskTimes = Time.now :: executedTaskTimes
+      executedTaskTimes = Instant.now() :: executedTaskTimes
       task.taskData.get("throw!").foreach(_ => {
         oopsedTasks = task :: oopsedTasks
         throw new Exception("Task throws exception for testing purposes.")

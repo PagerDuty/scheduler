@@ -1,19 +1,11 @@
 package com.pagerduty
 
-import java.util.concurrent.TimeUnit
 import com.typesafe.config.Config
+import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
 import scala.language.{ implicitConversions, postfixOps }
 
 package object scheduler {
-
-  implicit def scalaDurationToTwitter(duration: Duration): com.twitter.util.Duration = {
-    com.twitter.util.Duration.fromNanoseconds(duration.toNanos)
-  }
-
-  implicit class TwitterDurationExt(duration: com.twitter.util.Duration) {
-    def toScalaDuration: FiniteDuration = Duration.fromNanos(duration.inNanoseconds)
-  }
 
   private[scheduler] def getDuration(config: Config, key: String): FiniteDuration = {
     Duration.fromNanos(config.getDuration(key, TimeUnit.NANOSECONDS))

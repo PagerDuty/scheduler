@@ -1,11 +1,11 @@
 package com.pagerduty.scheduler
 
 import com.pagerduty.scheduler.model.Task
-import com.twitter.util.Time
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import org.scalatest.BeforeAndAfter
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.{Seconds, Span}
-
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -35,7 +35,7 @@ class DropTaskSpec
   "Scheduler should" - {
     "be able to drop stuck tasks" in {
       val orderingId = "orderingId"
-      val scheduledTime = Time.now.floor(1.millisecond)
+      val scheduledTime = Instant.now().truncatedTo(ChronoUnit.MILLIS)
       val stuckTask = new Task(orderingId, scheduledTime, "01", Map("throw!" -> "stuck task"))
       val goodTask = new Task(orderingId, scheduledTime, "02", Map("key" -> "good task"))
       scheduler.scheduleTask(stuckTask)

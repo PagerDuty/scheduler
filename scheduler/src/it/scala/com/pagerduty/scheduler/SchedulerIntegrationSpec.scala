@@ -1,12 +1,12 @@
 package com.pagerduty.scheduler
 
 import com.pagerduty.eris.schema.SchemaLoader
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task
-import com.twitter.util.Time
 import com.typesafe.config.ConfigFactory
+import java.time.Instant
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FreeSpec, Matchers}
 import org.scalatest.time.{Seconds, Span}
-
 import scala.concurrent.duration._
 
 
@@ -37,7 +37,7 @@ class SchedulerIntegrationSpec
 
   "Scheduler should" - {
     "run tasks as scheduled" in {
-      val tzero = Time.now
+      val tzero = Instant.now()
       val tplusFoo = tzero + 10.seconds
 
       // Schedule multiple tasks covering a mix of partially matching
@@ -59,7 +59,7 @@ class SchedulerIntegrationSpec
     }
 
     "run tasks across scheduler restarts (in the same jvm)" in {
-      val tzero = Time.now
+      val tzero = Instant.now()
       val tplusFoo = tzero + 10.seconds
 
       // Send due task & another task due in some time
@@ -87,7 +87,7 @@ class SchedulerIntegrationSpec
     }
 
     "run tasks beyond max-look-ahead" in {
-      val tzero = Time.now
+      val tzero = Instant.now()
       val tplusFoo = tzero + 20.seconds
 
       // Task due now and task due in after max-look-ahead seconds
@@ -105,7 +105,7 @@ class SchedulerIntegrationSpec
     }
 
     "run tasks correctly regardless of scheduling order" in {
-      val tzero = Time.now
+      val tzero = Instant.now()
       val tplusFoo = tzero + 5.seconds
 
       // Send task due in some time & another due now
@@ -122,7 +122,7 @@ class SchedulerIntegrationSpec
     }
 
     "run tasks correctly regardless of scheduling order - same orderingId" in {
-      val tzero = Time.now
+      val tzero = Instant.now()
       val tplusFoo = tzero + 5.seconds
 
       // Send task due in some time & another due now
@@ -139,7 +139,7 @@ class SchedulerIntegrationSpec
     }
 
     "run duplicate task just once" in {
-      val tzero = Time.now
+      val tzero = Instant.now()
       val tplusFoo = tzero + 5.seconds
 
       val taskA = new Task("oid1", tplusFoo, "uniq-key-1", Map("a" -> "b"))
@@ -153,8 +153,8 @@ class SchedulerIntegrationSpec
     "do not schedule tasks older than scheduling-grace-window" in {
       // Task due 10 seconds ago and task due 30 seconds ago
       // Assumes "scheduling-grace-window" is 20 seconds
-      val taskA = new Task("oid7", Time.now - 10.seconds, "uniq-key-7", Map("m" -> "n"))
-      val taskB = new Task("oid8", Time.now - 30.seconds, "uniq-key-8", Map("o" -> "p"))
+      val taskA = new Task("oid7", Instant.now() - 10.seconds, "uniq-key-7", Map("m" -> "n"))
+      val taskB = new Task("oid8", Instant.now() - 30.seconds, "uniq-key-8", Map("o" -> "p"))
       scheduler.scheduleTask(taskA)
       intercept[IllegalArgumentException] {
         scheduler.scheduleTask(taskB)
@@ -168,7 +168,7 @@ class SchedulerIntegrationSpec
       // Assumes "scheduling-grace-window" is more than the schedule delta + misc running time
       val scheduleDelta = 5.seconds
 
-      val tzero = Time.now
+      val tzero = Instant.now()
       val tplusFoo = tzero + scheduleDelta
 
       // Schedule task due in some time
@@ -179,8 +179,8 @@ class SchedulerIntegrationSpec
       scheduler.tasksShouldRunAt(taskA :: Nil, tplusFoo)
 
       // Schedule older task for the same orderingId
-      // Uses actual Time.now in case previous task ran slow
-      val taskB = new Task("oid101", Time.now - scheduleDelta, "uniq-key-1", Map("c" -> "d"))
+      // Uses actual now Time in case previous task ran slow
+      val taskB = new Task("oid101", Instant.now() - scheduleDelta, "uniq-key-1", Map("c" -> "d"))
       scheduler.scheduleTask(taskB)
 
       // Check that the task runs
@@ -188,7 +188,7 @@ class SchedulerIntegrationSpec
     }
 
     "retry tasks that throw exceptions" in {
-      val tzero = Time.now
+      val tzero = Instant.now()
       val tplus5secs = tzero + 5.seconds
       val tplus10secs = tzero + 10.seconds
       val tplus20secs = tzero + 20.seconds
