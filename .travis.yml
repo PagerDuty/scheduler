@@ -17,6 +17,7 @@ jdk:
   - oraclejdk8
 env:
   - CASS=cassandra
+  - CASS=cassandra2
   - CASS=cassandra3
 matrix:
   exclude:
