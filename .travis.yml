@@ -17,11 +17,7 @@ jdk:
   - oraclejdk8
 env:
   - CASS=cassandra
-  - CASS=cassandra3
-matrix:
-  exclude:
-  - env: CASS=cassandra3
-    jdk: oraclejdk7
+  - CASS=cassandra2
 sudo: required
 dist: trusty
 cache:
