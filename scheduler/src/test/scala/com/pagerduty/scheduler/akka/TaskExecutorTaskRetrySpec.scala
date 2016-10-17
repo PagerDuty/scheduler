@@ -1,16 +1,16 @@
 package com.pagerduty.scheduler.akka
 
-import com.pagerduty.scheduler.Scheduler.LoggingImpl
-import com.twitter.util.Time
-import scala.concurrent.duration._
-import scala.concurrent.Future
 import akka.testkit.{ TestFSMRef, TestProbe }
-import com.pagerduty.scheduler._
 import com.pagerduty.metrics.Metrics
+import com.pagerduty.scheduler.Scheduler.LoggingImpl
+import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.model.{ CompletionResult, Task, TaskStatus }
-import org.scalamock.scalatest.PathMockFactory
 import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
 import com.typesafe.config.ConfigFactory
+import java.time.Instant
+import org.scalamock.scalatest.PathMockFactory
+import scala.concurrent.duration._
+import scala.concurrent.Future
 
 class TaskExecutorTaskRetrySpecSpec
     extends ActorPathFreeSpec("TaskExecutorSpec")
@@ -58,7 +58,7 @@ class TaskExecutorTaskRetrySpecSpec
               case UpdateTaskStatus(`taskKey`, TaskStatus(`i`, CompletionResult.Incomplete, _)) =>
               // accept
             }
-            val attemptUpdate = TaskStatus(i, CompletionResult.Incomplete, Some(Time.now))
+            val attemptUpdate = TaskStatus(i, CompletionResult.Incomplete, Some(Instant.now()))
             taskExecutor ! TaskStatusUpdated(task.taskKey, attemptUpdate)
           }
 

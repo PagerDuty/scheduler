@@ -9,7 +9,6 @@ import com.pagerduty.eris.dao._
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.widerow.{Bound, EntryColumn}
-import com.twitter.util.Time
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 
@@ -35,15 +34,6 @@ object CassandraTaskExecutorTestService {
 
     def insert(logEntry: String): Future[Unit] = {
       logEntries(rowKey).queueInsert(EntryColumn(TimeUuid(), logEntry)).executeAsync()
-    }
-
-    def load(from: Time, to: Time): Future[Seq[String]] = {
-      logEntries.get(
-        colLimit = Some(1000),
-        rowKeys = Seq(rowKey),
-        lowerBound = Bound(TimeUuid.nonUniqueLowerBound(from.inMillis)),
-        upperBound = Bound(TimeUuid.nonUniqueLowerBound(to.inMillis + 1), inclusive = false)
-      ).map(_.map(_.value))
     }
   }
 

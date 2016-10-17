@@ -1,11 +1,11 @@
 package com.pagerduty.scheduler
 
 import com.pagerduty.eris.schema.SchemaLoader
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task
-import com.twitter.util.Time
 import com.typesafe.config.ConfigFactory
+import java.time.Instant
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FreeSpec, Matchers}
-
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
@@ -81,7 +81,7 @@ class SchedulerIntegrationRebalanceSpec
   "Scheduler should" - {
 
     "handle Kafka rebalancing" in {
-      val tzero = Time.now
+      val tzero = Instant.now()
       val tplusFoo = tzero + 20.seconds
       val tplusBar = tzero + 60.seconds
 

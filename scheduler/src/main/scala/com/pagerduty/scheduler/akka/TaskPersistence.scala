@@ -4,9 +4,10 @@ import akka.actor._
 import akka.pattern._
 import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.dao.TaskScheduleDao
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{ Task, TaskKey }
-import com.twitter.util.Time
+import java.time.Instant
 import scala.concurrent.duration._
 
 object TaskPersistence {
@@ -47,13 +48,13 @@ object TaskPersistence {
    * @param upperBound
    * @param limit
    */
-  case class LoadTasks(upperBound: Time, limit: Int) extends RetryableRequest
+  case class LoadTasks(upperBound: Instant, limit: Int) extends RetryableRequest
 
   /**
    * A notification from TaskPersistence sent after successful fetch from the database.
    * @param readCheckpointTime
    */
-  case class TasksLoaded(readCheckpointTime: Time) extends SuccessResponse
+  case class TasksLoaded(readCheckpointTime: Instant) extends SuccessResponse
 
   /**
    * A notification from TaskPersistence about a failed fetch attempt.
@@ -71,7 +72,7 @@ object TaskPersistence {
 
   sealed trait Data
   case class ReadCheckpoint(readCheckpoint: TaskKey) extends Data
-  case class InFlightDaoRead(readCheckpoint: TaskKey, queryUpperBound: Time, queryLimit: Int)
+  case class InFlightDaoRead(readCheckpoint: TaskKey, queryUpperBound: Instant, queryLimit: Int)
     extends Data
   case class InFlightDaoWrite(readCheckpoint: TaskKey, replyTo: ActorRef) extends Data
 
@@ -100,7 +101,7 @@ class TaskPersistence(
   startWith(Ready, ReadCheckpoint(getReadCheckpointOnRestart))
 
   when(Ready) {
-    case Event(LoadTasks(upperBound, limit), data: ReadCheckpoint) if upperBound > data.readCheckpoint.scheduledTime =>
+    case Event(LoadTasks(upperBound, limit), data: ReadCheckpoint) if upperBound.compareTo(data.readCheckpoint.scheduledTime) > 0 =>
       {
         taskScheduleDao.load(partitionId, data.readCheckpoint, upperBound, limit)
           .map(result => DaoReadSucceeded(result))
@@ -168,7 +169,7 @@ class TaskPersistence(
   }
 
   private def getReadCheckpointOnRestart: TaskKey = {
-    val checkpointTime = Time.now - lookBackOnRestart
+    val checkpointTime = Instant.now() - lookBackOnRestart
     TaskKey.lowerBound(checkpointTime)
   }
 }

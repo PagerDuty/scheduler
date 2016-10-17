@@ -3,8 +3,9 @@ package com.pagerduty.scheduler.akka
 import akka.actor._
 import akka.testkit._
 import com.pagerduty.scheduler._
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.specutil.ActorPathFreeSpec
-import com.twitter.util.Time
+import java.time.Instant
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.ShouldMatchers
 import scala.concurrent.duration._
@@ -73,18 +74,19 @@ class ThroughputControllerSpec extends ActorPathFreeSpec("ThroughputControllerSp
       reportInProgressTaskCounts(schedulerCount = 1, partitionExecutorCount = 1)
       taskPersistence.expectMsgType[TaskPersistence.LoadTasks]
       expectNoInProgressTaskCountRequests(minTickDelay + 100.millis)
-      throughputController.tell(TaskPersistence.TasksLoaded(Time.now), taskPersistence.testActor)
+      throughputController.tell(TaskPersistence.TasksLoaded(Instant.now()), taskPersistence.testActor)
       expectInProgressTaskCountRequest()
     }
 
     "set correct timer when fetched ahead" in {
       reportInProgressTaskCounts(schedulerCount = 1, partitionExecutorCount = 1)
       taskPersistence.expectMsgType[TaskPersistence.LoadTasks]
-      val nextFetchLowerBound = Time.now + maxLookAhead
+      val now = Instant.now()
+      val nextFetchLowerBound = now + maxLookAhead
       val readCheckpoint = nextFetchLowerBound + prefetchWindow
       taskPersistence reply TaskPersistence.TasksLoaded(readCheckpoint)
       expectInProgressTaskCountRequest()
-      Time.now should be >= nextFetchLowerBound
+      Instant.now().compareTo(nextFetchLowerBound) should be >= 0
     }
 
     "not lose tick timer when there are unhandled messages" in {
@@ -95,11 +97,11 @@ class ThroughputControllerSpec extends ActorPathFreeSpec("ThroughputControllerSp
 
     "request more tasks correctly" in {
       val ExpectedBatchSize = batchSize
-      val now = Time.now
+      val now = Instant.now()
       val expectedUpperBound = now + maxLookAhead
       val maxMessageDelay = 1000.millis
-      def equalWithinMessageDelay(a: Time, b: Time): Boolean = {
-        (a - b).toScalaDuration.abs < maxMessageDelay
+      def equalWithinMessageDelay(a: Instant, b: Instant): Boolean = {
+        java.time.Duration.between(a, b).toScalaDuration.toNanos.abs < maxMessageDelay.toNanos
       }
       reportInProgressTaskCounts(schedulerCount = 1, partitionExecutorCount = 1)
       taskPersistence.expectMsgPF(maxMessageDelay) {

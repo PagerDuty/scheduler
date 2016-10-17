@@ -1,18 +1,16 @@
 package com.pagerduty.scheduler.admin
 
-import java.util.NoSuchElementException
-
-import com.pagerduty.scheduler.dao.{ AttemptHistoryDao, TaskScheduleDao, TaskStatusDao }
-import com.pagerduty.scheduler.SchedulerKafkaConsumer
 import com.pagerduty.scheduler.admin.model.{ AdminTask, TaskDetails }
+import com.pagerduty.scheduler.dao.{ AttemptHistoryDao, TaskScheduleDao, TaskStatusDao }
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task._
 import com.pagerduty.scheduler.model.{ CompletionResult, Task, TaskKey, TaskStatus }
 import com.pagerduty.scheduler.specutil.{ FreeUnitSpec, TaskFactory }
-import com.twitter.conversions.time._
-import com.twitter.util.Time
+import java.time.Instant
+import java.util.NoSuchElementException
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-
+import scala.concurrent.duration._
 import scala.concurrent.Future
 
 class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
@@ -197,10 +195,10 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
         val limit = 12345
         (mockTaskScheduleDao.loadTasksFromPartitions(
           _: Set[PartitionId],
-          _: Time,
+          _: Instant,
           _: Option[Task.OrderingId],
           _: Option[Task.UniquenessKey],
-          _: Time,
+          _: Instant,
           _: Int
         ))
           .when(
@@ -255,10 +253,10 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
 
           (mockTaskScheduleDao.loadTasksFromPartitions(
             _: Set[PartitionId],
-            _: Time,
+            _: Instant,
             _: Option[Task.OrderingId],
             _: Option[Task.UniquenessKey],
-            _: Time,
+            _: Instant,
             _: Int
           ))
             .when(
@@ -274,8 +272,7 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
 
         "and all of the TaskStatus DAO calls succeed" in new FetchIncompleteTasksWhenDaoSucceedsTestContext {
           val taskStatus1 = TaskStatus(1, CompletionResult.Success, None)
-          val taskStatus2 = TaskStatus(2, CompletionResult.Failure, Some(task2.scheduledTime + 1
-            .minute))
+          val taskStatus2 = TaskStatus(2, CompletionResult.Failure, Some(task2.scheduledTime + 1.minute))
           val taskStatus3 = TaskStatus(3, CompletionResult.Dropped, None)
 
           (mockTaskStatusDao.getStatus(_, _))
@@ -325,8 +322,7 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
         "and one of the TaskStatusDao calls fails" in
           new FetchIncompleteTasksWhenDaoSucceedsTestContext {
             val taskStatus1 = TaskStatus(1, CompletionResult.Success, None)
-            val taskStatus2 = TaskStatus(2, CompletionResult.Failure, Some(task2.scheduledTime + 1
-              .minute))
+            val taskStatus2 = TaskStatus(2, CompletionResult.Failure, Some(task2.scheduledTime + 1.minute))
 
             (mockTaskStatusDao.getStatus(_, _))
               .when(task1PartitionId, task1.taskKey)

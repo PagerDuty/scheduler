@@ -2,9 +2,10 @@ package com.pagerduty.scheduler.admin
 
 import com.pagerduty.scheduler.admin.model.{ AdminTask, TaskDetails }
 import com.pagerduty.scheduler.dao.{ AttemptHistoryDao, TaskScheduleDao, TaskStatusDao }
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{ Task, TaskKey }
-import com.twitter.util.Time
+import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.concurrent.Future
 
@@ -14,10 +15,10 @@ trait AdminService {
   def fetchTaskWithDetails(key: TaskKey, attemptHistoryLimit: Int = 20): Future[AdminTask]
 
   def fetchIncompleteTasks(
-    from: Time,
+    from: Instant,
     fromOrderingId: Option[Task.OrderingId],
     fromUniquenessKey: Option[Task.UniquenessKey],
-    to: Time,
+    to: Instant,
     limit: Int
   ): Future[Seq[AdminTask]]
 }
@@ -81,10 +82,10 @@ class AdminServiceImpl(
   }
 
   def fetchIncompleteTasks(
-    from: Time,
+    from: Instant,
     fromOrderingId: Option[Task.OrderingId],
     fromUniquenessKey: Option[Task.UniquenessKey],
-    to: Time,
+    to: Instant,
     limit: Int
   ): Future[Seq[AdminTask]] = {
 
@@ -147,8 +148,8 @@ class AdminServiceImpl(
     }
   }
 
-  private def assertTimeWindowReasonable(from: Time, to: Time) = {
-    if (to.diff(from).inHours > 8) {
+  private def assertTimeWindowReasonable(from: Instant, to: Instant) = {
+    if (java.time.Duration.between(from, to).toScalaDuration.toHours > 8) {
       throw new IllegalArgumentException("You can only query over 8 hours in order to protect Cassandra from too many reads")
     }
   }

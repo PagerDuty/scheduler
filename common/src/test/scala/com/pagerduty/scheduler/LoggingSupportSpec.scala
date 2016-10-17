@@ -5,7 +5,6 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{ Matchers, WordSpecLike }
 import org.slf4j.Logger
-
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, Promise }
 import scala.util.Try
@@ -29,7 +28,7 @@ class LoggingSupportSpec extends WordSpecLike with Matchers with Eventually with
   val additionalTag = "additional" -> "tag"
   val additionalTags = Seq(additionalTag)
 
-  "LoggingSuppoer" should {
+  "LoggingSupport" should {
 
     val mockLogger = mock[Logger]
     val name = "test_name"

@@ -8,12 +8,12 @@ import com.netflix.astyanax.{ Cluster, Keyspace }
 import com.pagerduty.eris.dao.ErisSettings
 import com.pagerduty.metrics.Metrics
 import com.pagerduty.scheduler.dao.{ TaskScheduleDaoImpl, TaskStatusDaoImpl }
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.{ Scheduler, TaskExecutorService, _ }
-import com.twitter.util.Time
 import com.typesafe.config.Config
-
+import java.time.Instant
 import scala.annotation.tailrec
 import scala.concurrent.{ Await, TimeoutException }
 import scala.concurrent.duration._
@@ -49,8 +49,8 @@ class SchedulingSystem(
    * @return the number of stale tasks in ScheduledColumnFamily
    */
   def calculateStaleTasks(allPartitionIds: Set[PartitionId], limit: Int): Int = {
-    val from = Time.now - settings.lookBackOnRestart
-    val to = Time.now - settings.timeUntilStaleTask
+    val from = Instant.now() - settings.lookBackOnRestart
+    val to = Instant.now() - settings.timeUntilStaleTask
     val totalTaskCount = taskScheduleDao.getTotalTaskCount(
       allPartitionIds,
       from,

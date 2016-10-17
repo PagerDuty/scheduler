@@ -2,8 +2,9 @@ package com.pagerduty.scheduler.akka
 
 import akka.actor._
 import com.pagerduty.scheduler._
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task.PartitionId
-import com.twitter.util.Time
+import java.time.Instant
 import scala.concurrent.duration._
 
 object ThroughputController {
@@ -102,7 +103,7 @@ class ThroughputController(
   when(AwaitingTasksLoaded) {
     case Event(results: TaskPersistence.TasksLoaded, _) => {
       val nextFetchTime = results.readCheckpointTime - prefetchWindow
-      val nextFetchDelay = (nextFetchTime - Time.now).toScalaDuration
+      val nextFetchDelay = java.time.Duration.between(Instant.now(), nextFetchTime).toScalaDuration
       val tickDelay = minTickDelay.max(nextFetchDelay)
       waitForNextTick(tickDelay)
     }
@@ -144,7 +145,7 @@ class ThroughputController(
   }
 
   def loadMoreTasks(batchSize: Int) = {
-    val upperBound = Time.now + maxLookAhead
+    val upperBound = Instant.now() + maxLookAhead
     taskPersistence ! TaskPersistence.LoadTasks(upperBound, batchSize)
     goto(AwaitingTasksLoaded) using NoData
   }

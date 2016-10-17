@@ -3,11 +3,12 @@ package com.pagerduty.scheduler.akka
 import akka.actor._
 import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.akka.PartitionExecutor.ExecutePartitionTask
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{ Task, TaskKey }
+import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
-import com.twitter.util.Time
 
 object PartitionScheduler {
   case class ScheduleTasks(tasks: Seq[Task])
@@ -63,9 +64,9 @@ class PartitionScheduler(
   }
 
   def sendEligiblePendingTasks(): Unit = {
-    val now = Time.now
+    val now = Instant.now()
     val (readyTasks, remainingPendingTasks) = pendingTasks.partition {
-      case (taskKey, task) => taskKey.scheduledTime <= now
+      case (taskKey, task) => taskKey.scheduledTime.compareTo(now) <= 0
     }
     pendingTasks = remainingPendingTasks
     logging.reportInMemoryTaskCount(partitionId, "partitionScheduler", pendingTasks.size)
@@ -83,7 +84,7 @@ class PartitionScheduler(
   def updatePendingTaskTimer(nextTaskToRun: Option[Task]): Unit = {
     cancelPendingTimer()
     nextTaskToRun.foreach { task =>
-      val delayToNextTask = (task.scheduledTime - Time.now).toScalaDuration
+      val delayToNextTask = java.time.Duration.between(Instant.now(), task.scheduledTime).toScalaDuration
       val effectiveTimerDelay = delayToNextTask.max(Duration.Zero)
       setPendingTaskTimer(effectiveTimerDelay)
     }

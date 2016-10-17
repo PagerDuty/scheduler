@@ -6,8 +6,8 @@ import com.pagerduty.eris.serializers._
 import com.pagerduty.scheduler.model.{ TaskKey, TaskStatus }
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.widerow.{ Bound, EntryColumn }
-import com.twitter.util.{ Duration, Time }
-import com.twitter.conversions.time._
+import java.time.Instant
+import scala.concurrent.duration._
 import scala.concurrent.Future
 
 trait TaskStatusDao {
@@ -37,7 +37,7 @@ trait TaskStatusDao {
    * @return
    */
   def load(
-    partitionId: PartitionId, from: Time, to: Time, limit: Int
+    partitionId: PartitionId, from: Instant, to: Instant, limit: Int
   ): Future[Seq[(TaskKey, TaskStatus)]]
 
   /**
@@ -76,7 +76,7 @@ class TaskStatusDaoImpl(
   }
   def insert(partitionId: PartitionId, taskKey: TaskKey, status: TaskStatus): Future[Unit] = {
     statusMap(makeRowKey(partitionId, taskKey))
-      .queueInsert(EntryColumn(taskKey, status, Some(columnTtl.inSeconds))).executeAsync()
+      .queueInsert(EntryColumn(taskKey, status, Some(columnTtl.toSeconds.toInt))).executeAsync()
   }
 
   def getStatus(partitionId: PartitionId, taskKey: TaskKey): Future[TaskStatus] = {
@@ -91,9 +91,9 @@ class TaskStatusDaoImpl(
   }
 
   def load(
-    partitionId: PartitionId, from: Time, to: Time, limit: Int
+    partitionId: PartitionId, from: Instant, to: Instant, limit: Int
   ): Future[Seq[(TaskKey, TaskStatus)]] = {
-    require(from < to, "`from` must be less than `to`")
+    require(from.compareTo(to) < 0, "`from` must be less than `to`")
     val rowKeys = getRowKeysExclusive(partitionId, from, to)
     val fromBound = Bound(TaskKey(from, null, null))
     val toBound = Bound(TaskKey(to, null, null), inclusive = false)

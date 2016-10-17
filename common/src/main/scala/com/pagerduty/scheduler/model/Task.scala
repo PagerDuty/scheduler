@@ -1,7 +1,7 @@
 package com.pagerduty.scheduler.model
 
 import com.pagerduty.scheduler.model.Task.PartitionId
-import com.twitter.util.Time
+import java.time.Instant
 import java.util.UUID
 import org.json4s.DefaultFormats
 import org.json4s.JsonDSL._
@@ -38,7 +38,7 @@ import org.json4s.jackson.Serialization.{ read, write }
  */
 case class Task(
     orderingId: Task.OrderingId,
-    scheduledTime: Time,
+    scheduledTime: Instant,
     uniquenessKey: Task.UniquenessKey,
     taskData: Task.TaskData,
     version: Int = 1
@@ -77,5 +77,5 @@ object Task {
   def fromJson(task: String): Task = read[Task](task)
 
   /** Spit out an example task. Handy for tests and maybe some interactive work */
-  def example: Task = Task(UUID.randomUUID().toString, Time.now, UUID.randomUUID().toString, Map())
+  def example: Task = Task(UUID.randomUUID().toString, Instant.now(), UUID.randomUUID().toString, Map())
 }

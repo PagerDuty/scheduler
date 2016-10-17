@@ -4,10 +4,10 @@ import com.netflix.astyanax.{Cluster, Keyspace}
 import com.pagerduty.eris.dao._
 import com.pagerduty.scheduler.model.{CompletionResult, TaskAttempt, TaskKey}
 import com.pagerduty.scheduler.specutil.{TaskAttemptFactory, TaskFactory, TestTimer}
-import com.twitter.conversions.time._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import org.scalatest.{MustMatchers, fixture}
+import scala.concurrent.duration._
 
 class AttemptHistoryDaoSpec
     extends fixture.WordSpec with MustMatchers with DaoFixture with TestTimer with ScalaFutures {
@@ -31,7 +31,7 @@ class AttemptHistoryDaoSpec
       dao.insert(partitionId, taskKey, taskAttempt2).futureValue
       dao.loadAllAttempts(taskKey) mustEqual Seq(taskAttempt1, taskAttempt2)
 
-      Thread.sleep(columnTtl.inMilliseconds) // wait for TTL to expire
+      Thread.sleep(columnTtl.toMillis) // wait for TTL to expire
       dao.loadAllAttempts(taskKey) mustBe empty
     }
 

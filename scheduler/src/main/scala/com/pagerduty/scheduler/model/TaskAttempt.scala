@@ -1,6 +1,6 @@
 package com.pagerduty.scheduler.model
 
-import com.twitter.util.Time
+import java.time.Instant
 import org.json4s.DefaultFormats
 import org.json4s.jackson.Serialization.{ read, write }
 
@@ -9,10 +9,10 @@ import org.json4s.jackson.Serialization.{ read, write }
  */
 case class TaskAttempt(
     attemptNumber: Int,
-    startedAt: Time,
-    finishedAt: Time,
+    startedAt: Instant,
+    finishedAt: Instant,
     taskResult: CompletionResult,
-    taskResultUpdatedAt: Time,
+    taskResultUpdatedAt: Instant,
     exceptionClass: Option[String],
     exceptionMessage: Option[String],
     exceptionStackTrace: Option[String]
@@ -25,10 +25,10 @@ case class TaskAttempt(
 object TaskAttempt {
   def apply(
     attemptNumber: Int,
-    startedAt: Time,
-    finishedAt: Time,
+    startedAt: Instant,
+    finishedAt: Instant,
     taskResult: CompletionResult,
-    taskResultUpdatedAt: Time,
+    taskResultUpdatedAt: Instant,
     exception: Option[Throwable]
   ): TaskAttempt = {
     TaskAttempt(

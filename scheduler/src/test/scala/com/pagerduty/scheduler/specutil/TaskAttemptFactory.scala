@@ -1,13 +1,15 @@
 package com.pagerduty.scheduler.specutil
 
+import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model._
-import com.twitter.conversions.time._
-import com.twitter.util.Time
+import java.time.temporal.ChronoUnit
+import java.time.Instant
+import scala.concurrent.duration._
 
 object TaskAttemptFactory {
 
   def makeTaskAttempt(attemptNumber: Int, taskResult: CompletionResult) = {
-    val now = Time.now.floor(1.millisecond)
+    val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
     val hadException = taskResult match {
       case CompletionResult.Success => false
       case _ => true
