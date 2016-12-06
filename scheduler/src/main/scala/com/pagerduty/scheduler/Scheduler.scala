@@ -81,7 +81,7 @@ class SchedulerImpl(
 
   val kafkaConsumer = {
     val kafkaConsumerProps = {
-      SimpleKafkaConsumer.makeProps(schedulerSettings.kafkaBootstrapBroker, kafkaConsumerGroup)
+      SimpleKafkaConsumer.makeProps(schedulerSettings.kafkaBootstrapBroker, kafkaConsumerGroup, schedulerSettings.maxPollRecords)
     }
     new SchedulerKafkaConsumer(
       schedulerSettings, config, cluster, keyspace,

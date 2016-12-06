@@ -11,7 +11,8 @@ case class SchedulerSettings(
   kafkaPdConsumerRestartOnExceptionDelay: FiniteDuration,
   schedulingGraceWindow: FiniteDuration,
   maxTasksFetchedPerPartition: Int,
-  taskDataTagNames: Set[String]
+  taskDataTagNames: Set[String],
+  maxPollRecords: Option[Int]
 )
 
 object SchedulerSettings {
@@ -27,7 +28,11 @@ object SchedulerSettings {
       kafkaPdConsumerRestartOnExceptionDelay = getDuration(libConfig, "kafka.pd-simple-consumer.restart-on-exception-delay"),
       schedulingGraceWindow = getDuration(libConfig, "scheduling-grace-window"),
       maxTasksFetchedPerPartition = libConfig.getInt("stats.max-task-fetch-per-partition"),
-      taskDataTagNames = libConfig.getStringList("stats.task-data-tag-names").toSet
+      taskDataTagNames = libConfig.getStringList("stats.task-data-tag-names").toSet,
+      maxPollRecords = {
+        if (libConfig.hasPath("kafka.max-poll-records")) Some(libConfig.getInt("kafka.max-poll-records"))
+        else None
+      }
     )
   }
 }
