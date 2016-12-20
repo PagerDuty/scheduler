@@ -24,8 +24,11 @@ RELEASE_VER=$(cat version.sbt | grep -o '".*"' | tr -d '"')
 GIT_TAG=v$RELEASE_VER
 
 echo "Conditionally publishing release and cutting git tag..."
-if [ "${TRAVIS_PULL_REQUEST}" == 'false' -a "${TRAVIS_JDK_VERSION}" == 'oraclejdk8' ]; then
-  sbt -Dsbt.global.base=/home/travis/.sbt ++${TRAVIS_SCALA_VERSION} publish &&
-  git tag -a $GIT_TAG -m "Release version $RELEASE_VER" &&
-  git push origin $GIT_TAG
+
+if ! git ls-remote --exit-code origin refs/tags/$GIT_TAG; then
+  if [ "${TRAVIS_PULL_REQUEST}" == 'false' -a "${TRAVIS_JDK_VERSION}" == 'oraclejdk8' ]; then
+    sbt -Dsbt.global.base=/home/travis/.sbt ++${TRAVIS_SCALA_VERSION} publish &&
+    git tag -a $GIT_TAG -m "Release version $RELEASE_VER" &&
+    git push origin $GIT_TAG
+  fi
 fi
