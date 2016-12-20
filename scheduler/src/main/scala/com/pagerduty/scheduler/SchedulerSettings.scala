@@ -1,5 +1,7 @@
 package com.pagerduty.scheduler
 
+import java.util.Properties
+
 import com.typesafe.config._
 
 import scala.concurrent.duration.FiniteDuration
@@ -12,7 +14,8 @@ case class SchedulerSettings(
   schedulingGraceWindow: FiniteDuration,
   maxTasksFetchedPerPartition: Int,
   taskDataTagNames: Set[String],
-  maxPollRecords: Option[Int]
+  maxPollRecords: Option[Int],
+  kafkaProperties: Properties
 )
 
 object SchedulerSettings {
@@ -32,7 +35,13 @@ object SchedulerSettings {
       maxPollRecords = {
         if (libConfig.hasPath("kafka.max-poll-records")) Some(libConfig.getInt("kafka.max-poll-records"))
         else None
-      }
+      },
+      kafkaProperties = makeProperties(libConfig.getObject("kafka.consumer-properties"))
     )
+  }
+  private def makeProperties(configObject: ConfigObject): Properties = {
+    val result = new Properties()
+    result.putAll(configObject.unwrapped())
+    result
   }
 }
