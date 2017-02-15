@@ -109,15 +109,11 @@ libraryDependencies ++= Seq(
 )
 ```
 
-- Copy the schema migrations from `cassandra-migrations/` to your project, and change the keyspace name in those files from `<YourServiceName>Scheduler` to a suitable name (e.g. `ApolloScheduler`)
+- Copy the schema migrations from `cassandra-migrations/` to your project, and change the keyspace name in those files from `<YourServiceName>Scheduler` to a suitable name (e.g. `MyAwesomeServiceScheduler`)
 - Add configuration with appropriate Kafka & Cassandra details
 - Instantiate a Scheduler instance in your service
 - Wire up scheduleTask
 - Wire up taskRunner
-
-For more information on creating the Kafka topic, see the [Kafka Operations Guide](https://pagerduty.atlassian.net/wiki/display/ENG/Kafka+Operations+Guide#KafkaOperationsGuide-Topic&PartitionManagement).
-
-You can look at [Apollo](https://github.com/PagerDuty/rt-apollo) for example code.
 
 ### Scheduling Tasks
 
