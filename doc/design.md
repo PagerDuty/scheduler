@@ -1,7 +1,7 @@
 # Scheduler Design
 
 _(Note: this document was written when we started this project at PagerDuty; it's quite terse, but contains
-some important ideas that we thought were worth sharing when open sourcing the library. We've done som
+some important ideas that we thought were worth sharing when open sourcing the library. We've done some
 mild edits but left the original mostly in tact)_
 
 ## Goals
