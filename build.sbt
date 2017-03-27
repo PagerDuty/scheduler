@@ -67,7 +67,7 @@ lazy val common = (project in file("common")).
       "org.json4s"   %% "json4s-jackson" % "3.3.0",
       "org.slf4j" % "slf4j-api" % "1.7.13",
       "org.slf4j" % "jul-to-slf4j" % "1.7.13",
-      "org.apache.kafka" % "kafka-clients" % "0.10.1.0",
+      "org.apache.kafka" % "kafka-clients" % "0.10.1.1",
       "org.scalatest" %% "scalatest" % "2.2.6" % "test",
       "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
       "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
@@ -98,7 +98,7 @@ lazy val scheduler = (project in file("scheduler")).
     unmanagedSourceDirectories in IntegrationTest +=
       baseDirectory.value / "src/test/scala/com/pagerduty/scheduler/specutil",
     libraryDependencies ++= {
-      val kafkaConsumerVersion = "0.4.0"
+      val kafkaConsumerVersion = "0.4.1"
       Seq(
         "com.pagerduty" %% "metrics-api" % "1.2.1",
         "com.pagerduty" %% "eris-dao" % "2.0.0",
