@@ -9,12 +9,15 @@ import com.pagerduty.scheduler.admin.AdminServiceImpl
 import com.pagerduty.scheduler.akka.FailureResponse
 import com.pagerduty.scheduler.dao._
 import com.pagerduty.scheduler.datetimehelpers._
-import com.pagerduty.scheduler.gauge.{ Gauge, GaugeRunner, StaleTasksGauge }
+import com.pagerduty.scheduler.gauge.StaleTasksGauge
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.pagerduty.scheduler.model.{ Task, TaskAttempt, TaskKey, TaskStatus }
 import com.typesafe.config.Config
 import java.time.Instant
+
+import com.pagerduty.metrics.gauge.GaugeReporter
 import org.slf4j.{ Logger, LoggerFactory }
+
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, Future }
 import scala.util.control.NonFatal
@@ -77,7 +80,7 @@ class SchedulerImpl(
 )
     extends Scheduler(schedulerSettings, metrics)(logging) {
 
-  private val gaugeRunner = new GaugeRunner(logging)
+  private val gaugeReporter = new GaugeReporter
 
   val kafkaConsumer = {
     val kafkaConsumerProps = {
@@ -99,8 +102,8 @@ class SchedulerImpl(
 
   // Adds gauge to constantly check for the number of stale tasks in Cassandra
   val staleTasksGauge = new StaleTasksGauge(kafkaConsumer)
-  logging.registerStaleTasksGauge(staleTasksGauge)
-  gaugeRunner.runGauge(staleTasksGauge, 1.minute)
+  val staleTaskSampleConsumer = logging.staleTasksGaugeSampleConsumer
+  gaugeReporter.addGauge(staleTasksGauge, Set(staleTaskSampleConsumer))
 
   private lazy val erisSettings = new ErisSettings(metrics)
 
@@ -130,8 +133,7 @@ object Scheduler {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   trait Logging {
-    def registerStaleTasksGauge(gauge: StaleTasksGauge): Unit
-    def reportGaugeFailure(gauge: Gauge[_], throwable: Throwable): Unit
+    def staleTasksGaugeSampleConsumer: (Int) => Unit
     def monitorTasksSentToScheduler(
       persistTasksFuture: Future[Any],
       taskBatch: Map[PartitionId, Seq[Task]]
@@ -183,15 +185,12 @@ object Scheduler {
     private val topic = settings.kafkaTopic
     private val taskDataTagNames = settings.taskDataTagNames
 
-    def registerStaleTasksGauge(gauge: StaleTasksGauge): Unit = {
-      gauge.registerOnSampleCallback { staleCount =>
-        log.info(s"Scheduler stale tasks result: $staleCount stale tasks.")
-        metrics.histogram("stale_task_count", staleCount)
-      }
-    }
-
-    def reportGaugeFailure(gauge: Gauge[_], throwable: Throwable): Unit = {
-      log.error(s"${gauge.getClass.getName} has failed", throwable)
+    def staleTasksGaugeSampleConsumer: (Int) => Unit = {
+      (staleCount: Int) =>
+        {
+          log.info(s"Scheduler stale tasks result: $staleCount stale tasks.")
+          metrics.histogram("stale_task_count", staleCount)
+        }
     }
 
     def monitorTasksSentToScheduler(
