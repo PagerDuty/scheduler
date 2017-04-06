@@ -49,20 +49,12 @@ class SchedulerLoggingSpec extends UnitSpec with MockFactory with BeforeAndAfter
       logging.reportTaskAttemptFinished(partitionId, task, taskAttempt)
     }
 
-    "register a stale tasks gauge successfully" in {
-      class TestSchedulerKafkaConsumer extends SchedulerKafkaConsumer(
-        SchedulerSettings(ConfigFactory.load()),
-        ConfigFactory.load(), null, null, null, null, null, NullMetrics
-      ) {
-        override def countStaleTasks: Int = 1
-      }
-      val gauge = new StaleTasksGauge(new TestSchedulerKafkaConsumer)
+    "build a stale tasks gauge sample consumer" in {
+      val consumer = logging.staleTasksGaugeSampleConsumer
 
-      (mockLogger.info(_: String)).expects(*).once()
+      (mockLogger.info(_: String)).expects(*)
 
-      logging.registerStaleTasksGauge(gauge)
-
-      gauge.sample
+      consumer(1)
 
       eventually {
         mockMetrics.invocations should contain(AddMetricsInvocation("stale_task_count", Seq()))
