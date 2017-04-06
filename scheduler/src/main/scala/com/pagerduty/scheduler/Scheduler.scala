@@ -105,6 +105,11 @@ class SchedulerImpl(
   val staleTaskSampleConsumer = logging.staleTasksGaugeSampleConsumer
   gaugeReporter.addGauge(staleTasksGauge, Set(staleTaskSampleConsumer))
 
+  override def shutdown(): Unit = {
+    gaugeReporter.stop()
+    super.shutdown()
+  }
+
   private lazy val erisSettings = new ErisSettings(metrics)
 
   private def getTaskScheduleDao(): TaskScheduleDao = {
