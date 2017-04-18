@@ -21,7 +21,7 @@ Scheduler is intended as a replacement for our current WorkQueues. The new libra
 ## High-level Design
 
 Scheduler is a library that you include in your service code, not a separate service. The main API is specified
-in [`SchedulerClient`](https://docs.pd-internal.com/scala/scheduler-scala-api/#com.pagerduty.scheduler.SchedulerClient).
+in [`SchedulerClient`](https://github.com/PagerDuty/scheduler/blob/master/scala-api/src/main/scala/com/pagerduty/scheduler/SchedulerClient.scala).
 
 It's operation is shown in the following diagram:
 
@@ -38,11 +38,11 @@ It's operation is shown in the following diagram:
                      [ Kafka ]        [ Cassandra ]
 ```
 
-To schedule a [`Task`](https://docs.pd-internal.com/scala/scheduler-common/#com.pagerduty.scheduler.model.Task), you call [`scheduleTask()`](https://docs.pd-internal.com/scala/scheduler-scala-api/#com.pagerduty.scheduler.SchedulerClient) which will write this task to persistent storage.
+To schedule a [`Task`](https://github.com/PagerDuty/scheduler/blob/master/common/src/main/scala/com/pagerduty/scheduler/model/Task.scala), you call [`scheduleTask()`](https://github.com/PagerDuty/scheduler/blob/master/scala-api/src/main/scala/com/pagerduty/scheduler/SchedulerClient.scala#L27) which will write this task to persistent storage.
 
-The [scheduler](https://docs.pd-internal.com/scala/scheduler/#com.pagerduty.scheduler.SchedulerImpl) will then attempt to execute the task at the scheduled time on one of the hosts in the service cluster. Note that this host is unrelated to the host on which `scheduleTask()` was called for that task.
+The [scheduler](https://github.com/PagerDuty/scheduler/blob/master/scheduler/src/main/scala/com/pagerduty/scheduler/Scheduler.scala#L71) will then attempt to execute the task at the scheduled time on one of the hosts in the service cluster. Note that this host is unrelated to the host on which `scheduleTask()` was called for that task.
 
-Task execution will be a call to the `execute` method of the [`TaskExecutorService`](https://docs.pd-internal.com/scala/scheduler/#com.pagerduty.scheduler.TaskExecutorService) you configured the scheduler with. Once the handler finishes, the task is marked completed. If the handler throws an exception, the task is retried up to a certain limit and then marked as failed.
+Task execution will be a call to the `execute` method of the [`TaskExecutorService`](https://github.com/PagerDuty/scheduler/blob/master/scheduler/src/main/scala/com/pagerduty/scheduler/TaskExecutorService.scala) you configured the scheduler with. Once the handler finishes, the task is marked completed. If the handler throws an exception, the task is retried up to a certain limit and then marked as failed.
 
 The scheduler aims for "at least once" execution of tasks. This means that your tasks may be run more than once & you should design your task logic to handle this. This can happen due to a number of errors: network errors, persistence errors, crashing servers, etc.
 
@@ -164,9 +164,5 @@ what.
 
 - [Scheduler Operations Guide](operations.md)
 - [Scheduler Design](design.md)
-- Scheduler Scaladocs:
-  - [Client API](https://docs.pd-internal.com/scala/scheduler-scala-api/)
-  - [Common Code](https://docs.pd-internal.com/scala/scheduler-common)
-  - [Main Library](https://docs.pd-internal.com/scala/scheduler)
 - [Kafka Operations Guide](https://pagerduty.atlassian.net/wiki/display/ENG/Kafka+Operations+Guide)
 - [Cassandra Operations](https://pagerduty.atlassian.net/wiki/display/ENG/Cassandra+-+Operations)
