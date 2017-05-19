@@ -1,10 +1,10 @@
 package com.pagerduty.scheduler.admin.http
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 
 case class Settings(
-  httpPort: Int,
-  apiNamespace: String
+    httpPort: Int,
+    apiNamespace: String
 )
 
 object Settings {

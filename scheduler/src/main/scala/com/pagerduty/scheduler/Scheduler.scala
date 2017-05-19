@@ -1,32 +1,32 @@
 package com.pagerduty.scheduler
 
-import com.netflix.astyanax.{ Cluster, Keyspace }
+import com.netflix.astyanax.{Cluster, Keyspace}
 import com.pagerduty.eris.dao.ErisSettings
 import com.pagerduty.kafkaconsumer.SimpleKafkaConsumer
-import com.pagerduty.metrics.Event.{ AlertType, Priority }
-import com.pagerduty.metrics.{ Event, Metrics }
+import com.pagerduty.metrics.Event.{AlertType, Priority}
+import com.pagerduty.metrics.{Event, Metrics}
 import com.pagerduty.scheduler.admin.AdminServiceImpl
 import com.pagerduty.scheduler.akka.FailureResponse
 import com.pagerduty.scheduler.dao._
 import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.gauge.StaleTasksGauge
 import com.pagerduty.scheduler.model.Task.PartitionId
-import com.pagerduty.scheduler.model.{ Task, TaskAttempt, TaskKey, TaskStatus }
+import com.pagerduty.scheduler.model.{Task, TaskAttempt, TaskKey, TaskStatus}
 import com.typesafe.config.Config
 import java.time.Instant
 
 import com.pagerduty.metrics.gauge.GaugeReporter
-import org.slf4j.{ Logger, LoggerFactory }
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
 
 /**
- * Abstract class which contains the base functions required for the scheduler
- *
- * @param schedulerSettings The settings object which contains the necessary properties for the scheduler
- */
+  * Abstract class which contains the base functions required for the scheduler
+  *
+  * @param schedulerSettings The settings object which contains the necessary properties for the scheduler
+  */
 abstract class Scheduler(
     schedulerSettings: SchedulerSettings,
     metrics: Metrics
@@ -40,16 +40,16 @@ abstract class Scheduler(
   protected val kafkaConsumer: SchedulerKafkaConsumer
 
   /**
-   * Starts up the scheduler service
-   */
+    * Starts up the scheduler service
+    */
   def start(): Unit = {
     kafkaConsumer.start()
   }
 
   /**
-   * Stops the scheduler service and releases the partitions,
-   * blocks until the scheduler has shutdown.
-   */
+    * Stops the scheduler service and releases the partitions,
+    * blocks until the scheduler has shutdown.
+    */
   def shutdown(): Unit = {
     logging.trackResourceShutdown("Scheduler") {
       Await.result(kafkaConsumer.shutdown(), Duration.Inf)
@@ -60,25 +60,24 @@ abstract class Scheduler(
 }
 
 /**
- * Implementation of the Scheduler and the primary interface for users of this library.
- *
- * @param schedulerSettings The settings object which contains the necessary properties for the scheduler
- * @param config The raw Typesafe config for this library
- * @param cluster The Cassandra cluster used by this library
- * @param keyspace The Cassandra keyspace used by this library for storing tasks
- * @param taskExecutorServiceFactory A factory for creating disposable task executor services
- */
+  * Implementation of the Scheduler and the primary interface for users of this library.
+  *
+  * @param schedulerSettings The settings object which contains the necessary properties for the scheduler
+  * @param config The raw Typesafe config for this library
+  * @param cluster The Cassandra cluster used by this library
+  * @param keyspace The Cassandra keyspace used by this library for storing tasks
+  * @param taskExecutorServiceFactory A factory for creating disposable task executor services
+  */
 class SchedulerImpl(
-  schedulerSettings: SchedulerSettings,
-  config: Config,
-  metrics: Metrics,
-  cluster: Cluster,
-  keyspace: Keyspace,
-  taskExecutorServiceFactory: Set[PartitionId] => TaskExecutorService
+    schedulerSettings: SchedulerSettings,
+    config: Config,
+    metrics: Metrics,
+    cluster: Cluster,
+    keyspace: Keyspace,
+    taskExecutorServiceFactory: Set[PartitionId] => TaskExecutorService
 )(
-  logging: Scheduler.Logging = new Scheduler.LoggingImpl(schedulerSettings, metrics)
-)
-    extends Scheduler(schedulerSettings, metrics)(logging) {
+    logging: Scheduler.Logging = new Scheduler.LoggingImpl(schedulerSettings, metrics)
+) extends Scheduler(schedulerSettings, metrics)(logging) {
 
   private val gaugeReporter = new GaugeReporter
 
@@ -87,16 +86,23 @@ class SchedulerImpl(
       // Start with the optional extra properties, so that
       // makeProps has a chance to have the final say.
       val props = schedulerSettings.kafkaProperties
-      props.putAll(SimpleKafkaConsumer.makeProps(
-        schedulerSettings.kafkaBootstrapBroker,
-        kafkaConsumerGroup,
-        schedulerSettings.maxPollRecords
-      ))
+      props.putAll(
+        SimpleKafkaConsumer.makeProps(
+          schedulerSettings.kafkaBootstrapBroker,
+          kafkaConsumerGroup,
+          schedulerSettings.maxPollRecords
+        ))
       props
     }
     new SchedulerKafkaConsumer(
-      schedulerSettings, config, cluster, keyspace,
-      kafkaConsumerProps, taskExecutorServiceFactory, logging, metrics
+      schedulerSettings,
+      config,
+      cluster,
+      keyspace,
+      kafkaConsumerProps,
+      taskExecutorServiceFactory,
+      logging,
+      metrics
     )
   }
 
@@ -140,8 +146,8 @@ object Scheduler {
   trait Logging {
     def staleTasksGaugeSampleConsumer: (Int) => Unit
     def monitorTasksSentToScheduler(
-      persistTasksFuture: Future[Any],
-      taskBatch: Map[PartitionId, Seq[Task]]
+        persistTasksFuture: Future[Any],
+        taskBatch: Map[PartitionId, Seq[Task]]
     ): Unit
     def monitorTaskExecution(taskExecutionFuture: Future[Unit], task: Task): Unit
 
@@ -151,13 +157,15 @@ object Scheduler {
     def reportTaskExecutionDelay(partitionId: PartitionId, task: Task, delay: Duration): Unit
     def reportTaskStatusNotFetched(taskKey: TaskKey, exception: Throwable): Unit
     def reportTaskAttemptFinished(
-      partitionId: PartitionId,
-      task: Task,
-      taskAttempt: TaskAttempt
+        partitionId: PartitionId,
+        task: Task,
+        taskAttempt: TaskAttempt
     ): Unit
 
     def reportTaskStatusNotUpdated(
-      taskKey: TaskKey, status: TaskStatus, exception: Throwable
+        taskKey: TaskKey,
+        status: TaskStatus,
+        exception: Throwable
     ): Unit
 
     def reportRetryableRequestFailed(message: Any, response: FailureResponse, willRetry: Boolean): Unit
@@ -169,8 +177,10 @@ object Scheduler {
 
     def reportConsistencyCheckException(message: String, t: Throwable): Unit
     def reportConsistencyCheckResults(
-      from: Instant, to: Instant,
-      totalEnqueued: Int, incompleteTasks: Seq[TaskKey]
+        from: Instant,
+        to: Instant,
+        totalEnqueued: Int,
+        incompleteTasks: Seq[TaskKey]
     ): Unit
 
     def reportActorSystemRestart(throwable: Throwable): Unit
@@ -180,27 +190,25 @@ object Scheduler {
   }
 
   class LoggingImpl(
-    settings: SchedulerSettings,
-    metrics: Metrics,
-    attemptHistoryDao: Option[AttemptHistoryDao] = None,
-    private val log: Logger = LoggerFactory.getLogger(getClass)
-  )
-      extends Logging {
+      settings: SchedulerSettings,
+      metrics: Metrics,
+      attemptHistoryDao: Option[AttemptHistoryDao] = None,
+      private val log: Logger = LoggerFactory.getLogger(getClass)
+  ) extends Logging {
     private val consumerGroup = settings.kafkaConsumerGroup
     private val topic = settings.kafkaTopic
     private val taskDataTagNames = settings.taskDataTagNames
 
-    def staleTasksGaugeSampleConsumer: (Int) => Unit = {
-      (staleCount: Int) =>
-        {
-          log.info(s"Scheduler stale tasks result: $staleCount stale tasks.")
-          metrics.histogram("stale_task_count", staleCount)
-        }
+    def staleTasksGaugeSampleConsumer: (Int) => Unit = { (staleCount: Int) =>
+      {
+        log.info(s"Scheduler stale tasks result: $staleCount stale tasks.")
+        metrics.histogram("stale_task_count", staleCount)
+      }
     }
 
     def monitorTasksSentToScheduler(
-      persistTasksFuture: Future[Any],
-      taskBatch: Map[PartitionId, Seq[Task]]
+        persistTasksFuture: Future[Any],
+        taskBatch: Map[PartitionId, Seq[Task]]
     ): Unit = {
       if (taskBatch.nonEmpty) {
         val logString = s"sending tasks to scheduler: ${taskBatch.values.flatten.map(_.taskKey)}"
@@ -220,8 +228,12 @@ object Scheduler {
 
     def monitorTaskExecution(taskExecutionFuture: Future[Unit], task: Task): Unit = {
       val logString = Some(s"executing task: ${task.taskKey}.")
-      reportFutureResults(metrics, log, "task_execution", logString, taskExecutionFuture,
-        additionalTags(task, taskDataTagNames))
+      reportFutureResults(metrics,
+                          log,
+                          "task_execution",
+                          logString,
+                          taskExecutionFuture,
+                          additionalTags(task, taskDataTagNames))
     }
 
     def reportKafkaClusterLookupError(clusterTag: String): Unit = {
@@ -237,22 +249,25 @@ object Scheduler {
       log.error(s"Failure determining if task with key $taskKey has been completed.", exception)
     }
     def reportTaskAttemptFinished(
-      partitionId: PartitionId,
-      task: Task,
-      taskAttempt: TaskAttempt
+        partitionId: PartitionId,
+        task: Task,
+        taskAttempt: TaskAttempt
     ): Unit = {
       val tags = additionalTags(task, taskDataTagNames)
       val executionDuration = java.time.Duration.between(taskAttempt.startedAt, taskAttempt.finishedAt).toScalaDuration
       metrics.histogram("task_execution_duration", executionDuration.toMillis.toInt, tags: _*)
       attemptHistoryDao.foreach { dao =>
-        dao.insert(partitionId, task.taskKey, taskAttempt)
+        dao
+          .insert(partitionId, task.taskKey, taskAttempt)
           .onFailure {
             case NonFatal(e) => log.error(s"Exception when saving $taskAttempt for $task.", e)
           }
       }
     }
     def reportTaskStatusNotUpdated(
-      taskKey: TaskKey, status: TaskStatus, exception: Throwable
+        taskKey: TaskKey,
+        status: TaskStatus,
+        exception: Throwable
     ): Unit = {
       log.error(s"Couldn't mark task with key $taskKey as $status.", exception)
     }
@@ -283,8 +298,10 @@ object Scheduler {
     }
 
     def reportConsistencyCheckResults(
-      from: Instant, to: Instant,
-      totalEnqueued: Int, incompleteTasks: Seq[TaskKey]
+        from: Instant,
+        to: Instant,
+        totalEnqueued: Int,
+        incompleteTasks: Seq[TaskKey]
     ): Unit = {
       metrics.count("checker_total_enqueued", totalEnqueued)
       metrics.count("checker_incomplete", incompleteTasks.size)

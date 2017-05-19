@@ -2,11 +2,11 @@ package com.pagerduty.scheduler.model
 
 import java.time.Instant
 import org.json4s.DefaultFormats
-import org.json4s.jackson.Serialization.{ read, write }
+import org.json4s.jackson.Serialization.{read, write}
 
 /**
- * Task status.
- */
+  * Task status.
+  */
 case class TaskStatus(
     numberOfAttempts: Int,
     completionResult: CompletionResult,

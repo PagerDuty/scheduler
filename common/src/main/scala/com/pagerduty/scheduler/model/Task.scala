@@ -6,36 +6,36 @@ import java.util.UUID
 import org.json4s.DefaultFormats
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
-import org.json4s.jackson.Serialization.{ read, write }
+import org.json4s.jackson.Serialization.{read, write}
 
 /**
- * A task for scheduling.
- *
- * @param orderingId The key of a logical ordering with which to associate the task. Ordering of
- *                 tasks is defined only for tasks with the same orderingId, and only when this
- *                 method is called in the same order as the scheduled times. That is, task1 is
- *                 only guaranteed to execute before task2 if they have the same orderingId, task1
- *                 has a scheduledTime before the scheduledTime of task2, and scheduleTask is
- *                 called for task1 before it is called for task2.
- *
- *                 As a result of this ordering guarantee note that if a task with a given
- *                 orderingId is blocked, this will not allow other tasks with the same orderingId to
- *                 execute.
- *
- *                DO NOT put commas in this string! It will break parsing the key from a string.
- * @param scheduledTime The time at which to run the task.
- * @param uniquenessKey The (orderingId, scheduledTime, uniquenessKey) tuple is the ID for a task.
- *                      When a task is scheduled with an existing ID, it will overwrite the
- *                      existing task. If the original task has been completed, the new task will
- *                      not be re-run. This key can be used to schedule tasks with the same
- *                      orderingId and scheduledTime.
- *
- *                     DO NOT put commas in this string!
- * @param taskData Application-defined task data. This likely includes a task identifier,
- *                 and possibly task state.
- * @param version Serialization version number so we can make changes in the future.
- *
- */
+  * A task for scheduling.
+  *
+  * @param orderingId The key of a logical ordering with which to associate the task. Ordering of
+  *                 tasks is defined only for tasks with the same orderingId, and only when this
+  *                 method is called in the same order as the scheduled times. That is, task1 is
+  *                 only guaranteed to execute before task2 if they have the same orderingId, task1
+  *                 has a scheduledTime before the scheduledTime of task2, and scheduleTask is
+  *                 called for task1 before it is called for task2.
+  *
+  *                 As a result of this ordering guarantee note that if a task with a given
+  *                 orderingId is blocked, this will not allow other tasks with the same orderingId to
+  *                 execute.
+  *
+  *                DO NOT put commas in this string! It will break parsing the key from a string.
+  * @param scheduledTime The time at which to run the task.
+  * @param uniquenessKey The (orderingId, scheduledTime, uniquenessKey) tuple is the ID for a task.
+  *                      When a task is scheduled with an existing ID, it will overwrite the
+  *                      existing task. If the original task has been completed, the new task will
+  *                      not be re-run. This key can be used to schedule tasks with the same
+  *                      orderingId and scheduledTime.
+  *
+  *                     DO NOT put commas in this string!
+  * @param taskData Application-defined task data. This likely includes a task identifier,
+  *                 and possibly task state.
+  * @param version Serialization version number so we can make changes in the future.
+  *
+  */
 case class Task(
     orderingId: Task.OrderingId,
     scheduledTime: Instant,

@@ -1,12 +1,12 @@
 package com.pagerduty.scheduler.akka
 
 import scala.concurrent.duration._
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import com.pagerduty.scheduler.getDuration
 
 /**
- * Dedicated settings wrapper for the SchedulingSystem.
- */
+  * Dedicated settings wrapper for the SchedulingSystem.
+  */
 case class Settings(
     exponentialBackoffFactor: FiniteDuration,
     maxTaskBackoffPeriod: FiniteDuration,
