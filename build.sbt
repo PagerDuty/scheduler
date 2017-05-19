@@ -59,6 +59,7 @@ lazy val sharedSettings = Seq(
 
 lazy val common = (project in file("common")).
   settings(sharedSettings: _*).
+  enablePlugins(ScalafmtPlugin).
   settings(
     name := "scheduler-common",
     libraryDependencies ++= Seq(
@@ -76,6 +77,7 @@ lazy val common = (project in file("common")).
 
 lazy val scalaApi = (project in file("scala-api")).
   dependsOn(common).
+  enablePlugins(ScalafmtPlugin).
   settings(sharedSettings: _*).
   settings(
     name := "scheduler-scala-api",
@@ -90,6 +92,7 @@ lazy val scalaApi = (project in file("scala-api")).
 lazy val scheduler = (project in file("scheduler")).
   dependsOn(common % "it,test->test;compile->compile").
   dependsOn(scalaApi % "it").
+  enablePlugins(ScalafmtPlugin).
   configs(IntegrationTest).
   settings(sharedSettings: _*).
   settings(Defaults.itSettings: _*).
@@ -119,6 +122,7 @@ lazy val scheduler = (project in file("scheduler")).
 lazy val httpAdmin = (project in file("http-admin")).
   dependsOn(common % "test->test;compile->compile").
   dependsOn(scheduler % "it->it;test->test;compile->compile").
+  enablePlugins(ScalafmtPlugin).
   configs(IntegrationTest).
   settings(sharedSettings: _*).
   settings(Defaults.itSettings: _*).
