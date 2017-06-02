@@ -36,7 +36,7 @@ import org.json4s.jackson.Serialization.{ read, write }
  * @param version Serialization version number so we can make changes in the future.
  *
  */
-case class Task(
+final case class Task(
     orderingId: Task.OrderingId,
     scheduledTime: Instant,
     uniquenessKey: Task.UniquenessKey,
