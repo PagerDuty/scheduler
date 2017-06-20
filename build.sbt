@@ -91,6 +91,7 @@ lazy val scheduler = (project in file("scheduler")).
   dependsOn(common % "it,test->test;compile->compile").
   dependsOn(scalaApi % "it").
   configs(IntegrationTest).
+  settings(inConfig(IntegrationTest)(scalafmtSettings)).
   settings(sharedSettings: _*).
   settings(Defaults.itSettings: _*).
   settings(
@@ -120,6 +121,7 @@ lazy val httpAdmin = (project in file("http-admin")).
   dependsOn(common % "test->test;compile->compile").
   dependsOn(scheduler % "it->it;test->test;compile->compile").
   configs(IntegrationTest).
+  settings(inConfig(IntegrationTest)(scalafmtSettings)).
   settings(sharedSettings: _*).
   settings(Defaults.itSettings: _*).
   settings(
@@ -140,6 +142,9 @@ lazy val httpAdmin = (project in file("http-admin")).
     }
   )
 
-lazy val root = (project in file(".")).settings(
+lazy val root = (project in file("."))
+  .settings(
     publish := { }
   ).aggregate(common, scalaApi, scheduler, httpAdmin)
+
+scalafmtOnCompile in ThisBuild := true
