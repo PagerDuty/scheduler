@@ -3,7 +3,7 @@ package com.pagerduty
 import com.typesafe.config.Config
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
-import scala.language.{ implicitConversions, postfixOps }
+import scala.language.{implicitConversions, postfixOps}
 
 package object scheduler {
 

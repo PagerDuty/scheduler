@@ -11,11 +11,7 @@ import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.BeforeAndAfter
 import scala.concurrent.duration._
 
-class SchedulerIntegrationWhiteboxSpec
-  extends SchedulerIntegrationSpecBase
-    with BeforeAndAfter
-    with PathMockFactory
-{
+class SchedulerIntegrationWhiteboxSpec extends SchedulerIntegrationSpecBase with BeforeAndAfter with PathMockFactory {
   after {
     dropAndLoadCassSchema()
   }

@@ -7,11 +7,7 @@ import com.pagerduty.scheduler.model.Task.PartitionId
 
 object PartitionSupervisor {
 
-  def props(
-    settings: Settings,
-    queueContext: QueueContext,
-    partitionId: PartitionId
-  ): Props = {
+  def props(settings: Settings, queueContext: QueueContext, partitionId: PartitionId): Props = {
     val taskPersistenceFactory = (context: ActorRefFactory, args: TaskPersistenceArgs) => {
       context.actorOf(TaskPersistence.props(args), s"taskPersistence$partitionId")
     }
@@ -20,21 +16,22 @@ object PartitionSupervisor {
 }
 
 /**
- * The root supervisor for all the partition related actors for a give `partitionId`.
- * On creation, spawns all the children and subsequently forwards messages to TaskPersistence
- * actor.
- *
- * @param settings
- * @param queueContext
- * @param partitionId
- * @param taskPersistenceFactory
- */
+  * The root supervisor for all the partition related actors for a give `partitionId`.
+  * On creation, spawns all the children and subsequently forwards messages to TaskPersistence
+  * actor.
+  *
+  * @param settings
+  * @param queueContext
+  * @param partitionId
+  * @param taskPersistenceFactory
+  */
 class PartitionSupervisor(
     settings: Settings,
     queueContext: QueueContext,
     partitionId: PartitionId,
-    taskPersistenceFactory: (ActorRefFactory, TaskPersistenceArgs) => ActorRef
-) extends Actor with ActorLogging {
+    taskPersistenceFactory: (ActorRefFactory, TaskPersistenceArgs) => ActorRef)
+    extends Actor
+    with ActorLogging {
   override val supervisorStrategy = Supervision.AlwaysEscalateStrategy
   val taskStatusTracker: ActorRef = {
     val statusTrackerProps = TaskStatusTracker.props(partitionId, queueContext.taskStatusDao)
@@ -45,7 +42,9 @@ class PartitionSupervisor(
   }
   val throughputController: ActorRef = {
     val throughputControllerProps = ThroughputController.props(
-      partitionId, settings, queueContext.logging
+      partitionId,
+      settings,
+      queueContext.logging
     )
     context.actorOf(throughputControllerProps, s"throughputController$partitionId")
   }
@@ -55,13 +54,19 @@ class PartitionSupervisor(
   }
   val partitionScheduler: ActorRef = {
     val partitionSchedulerProps = PartitionScheduler.props(
-      partitionId, partitionExecutor, queueContext.logging
+      partitionId,
+      partitionExecutor,
+      queueContext.logging
     )
     context.actorOf(partitionSchedulerProps, s"partitionScheduler$partitionId")
   }
   val taskPersistence = {
     val taskPersistenceArgs = TaskPersistenceArgs(
-      settings, partitionId, queueContext.taskScheduleDao, partitionScheduler, throughputController
+      settings,
+      partitionId,
+      queueContext.taskScheduleDao,
+      partitionScheduler,
+      throughputController
     )
     val persister = taskPersistenceFactory(context, taskPersistenceArgs)
 

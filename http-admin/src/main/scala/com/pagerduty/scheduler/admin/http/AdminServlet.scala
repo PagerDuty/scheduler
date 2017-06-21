@@ -2,38 +2,31 @@ package com.pagerduty.scheduler.admin.http
 
 import com.pagerduty.scheduler.admin.AdminService
 import com.pagerduty.scheduler.admin.model._
-import com.pagerduty.scheduler.model.{ CompletionResult, Task, TaskKey }
+import com.pagerduty.scheduler.model.{CompletionResult, Task, TaskKey}
 import java.time.format.DateTimeFormatter
-import java.time.{ Instant, ZoneOffset }
+import java.time.{Instant, ZoneOffset}
 import java.util.NoSuchElementException
 import java.util.concurrent.Executors
-import org.json4s.{ DefaultFormats, Formats }
+import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.slf4j.LoggerFactory
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
- * This class is used by the standalone AdminHttpServer, or it can be mounted into a service's
- * existing Scalatra context (if the service is already doing HTTP via Scalatra).
- */
-class AdminServlet(
-  adminService: AdminService
-) extends ScalatraServlet
-    with JacksonJsonSupport
-    with FutureSupport {
+  * This class is used by the standalone AdminHttpServer, or it can be mounted into a service's
+  * existing Scalatra context (if the service is already doing HTTP via Scalatra).
+  */
+class AdminServlet(adminService: AdminService) extends ScalatraServlet with JacksonJsonSupport with FutureSupport {
   import AdminServlet._
 
   val log = LoggerFactory.getLogger(getClass)
 
   before() {
     lazy val requestLog =
-      s"Scheduler API: ${request.getMethod} to ${request.getRequestURI} with params ${
-        request
-          .getQueryString
-      }"
+      s"Scheduler API: ${request.getMethod} to ${request.getRequestURI} with params ${request.getQueryString}"
     log.info(requestLog)
     contentType = formats("json")
   }
@@ -113,9 +106,9 @@ class AdminServlet(
   }
 
   private def parseTaskKeyFromParams(
-    successAction: TaskKey => Future[ActionResult],
-    failureBuilder: String => Future[ActionResult]
-  ) = {
+      successAction: TaskKey => Future[ActionResult],
+      failureBuilder: String => Future[ActionResult]
+    ) = {
     val parseTaskKey = Try(TaskKey.fromString(params("key")))
 
     parseTaskKey match {

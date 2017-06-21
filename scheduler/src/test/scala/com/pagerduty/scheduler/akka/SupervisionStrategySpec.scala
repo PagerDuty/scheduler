@@ -1,12 +1,12 @@
 package com.pagerduty.scheduler.akka
 
 import akka.actor.SupervisorStrategy.Escalate
-import akka.actor.{ Actor, Props }
-import akka.testkit.{ TestProbe, TestActorRef }
+import akka.actor.{Actor, Props}
+import akka.testkit.{TestProbe, TestActorRef}
 import com.pagerduty.scheduler.Scheduler
 import com.pagerduty.scheduler.akka.TestSupervisionStrategy.ThrowException
 import com.pagerduty.scheduler.specutil.ActorPathFreeSpec
-import org.scalamock.scalatest.{ PathMockFactory }
+import org.scalamock.scalatest.{PathMockFactory}
 
 import scala.concurrent.duration._
 
@@ -14,8 +14,7 @@ case object TestSupervisionStrategy {
   case class ThrowException()
 
 }
-private class TestSupervisionStrategy()
-    extends Actor {
+private class TestSupervisionStrategy() extends Actor {
   import TestSupervisionStrategy._
   override val supervisorStrategy = Supervision.AlwaysEscalateStrategy
   def receive = {
@@ -25,8 +24,7 @@ private class TestSupervisionStrategy()
   }
 }
 
-private class TestTopicSupervisorStrategy(mockLogger: Scheduler.Logging)
-    extends TestSupervisionStrategy {
+private class TestTopicSupervisorStrategy(mockLogger: Scheduler.Logging) extends TestSupervisionStrategy {
   override val supervisorStrategy = Supervision.makeAlwaysEscalateTopicSupervisorStrategy(mockLogger)
 }
 class SupervisionStrategySpec extends ActorPathFreeSpec("SupervisionStrategySpec") with PathMockFactory {

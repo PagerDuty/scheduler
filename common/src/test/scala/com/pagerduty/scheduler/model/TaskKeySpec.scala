@@ -2,9 +2,9 @@ package com.pagerduty.scheduler.model
 
 import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
-import java.time.{ Instant, ZoneOffset }
+import java.time.{Instant, ZoneOffset}
 import java.util.UUID
-import org.scalatest.{ Matchers, WordSpecLike }
+import org.scalatest.{Matchers, WordSpecLike}
 
 class TaskKeySpec extends WordSpecLike with Matchers {
   "TaskKey" should {

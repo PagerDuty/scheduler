@@ -10,28 +10,24 @@ import scala.concurrent.duration._
 object TopicSupervisor {
 
   /**
-   * A request to durable store and subsequently process incoming tasks. TopicSupervisor will
-   * respond with `TasksPersisted` message or a `Status.Failure` message.
-   *
-   * @param taskBatch
-   */
+    * A request to durable store and subsequently process incoming tasks. TopicSupervisor will
+    * respond with `TasksPersisted` message or a `Status.Failure` message.
+    *
+    * @param taskBatch
+    */
   case class ProcessTaskBatch(taskBatch: Map[PartitionId, Seq[Task]])
 
   /**
-   * A response to ProcessTaskBatch, sent after a task batch has been durably stored.
-   */
+    * A response to ProcessTaskBatch, sent after a task batch has been durably stored.
+    */
   case object TaskBatchProcessed
 
   /**
-   * A response to ProcessTaskBatch, sent if the task batch was not durably stored.
-   */
+    * A response to ProcessTaskBatch, sent if the task batch was not durably stored.
+    */
   case class TaskBatchNotProcessed(throwable: Throwable)
 
-  def props(
-    settings: Settings,
-    queueContext: QueueContext,
-    partitions: Set[PartitionId]
-  ): Props = {
+  def props(settings: Settings, queueContext: QueueContext, partitions: Set[PartitionId]): Props = {
     val partitionSupervisorFactory = {
       (context: ActorRefFactory, partitionId: PartitionId, queueContext: QueueContext) =>
         {
@@ -39,28 +35,32 @@ object TopicSupervisor {
           context.actorOf(partitionProps, s"partitionSupervisor$partitionId")
         }
     }
-    Props(new TopicSupervisor(
-      settings, queueContext, partitions, partitionSupervisorFactory
-    ))
+    Props(
+      new TopicSupervisor(
+        settings,
+        queueContext,
+        partitions,
+        partitionSupervisorFactory
+      )
+    )
   }
 
   private def makePersistRequestActorProps(
-    partitionSupervisors: Map[PartitionId, ActorRef],
-    taskBatch: Map[PartitionId, Seq[Task]],
-    requestTimeout: FiniteDuration,
-    replyTo: ActorRef
-  ): Props =
-    {
-      Props(new PersistRequestActor(partitionSupervisors, taskBatch, requestTimeout, replyTo))
-    }
+      partitionSupervisors: Map[PartitionId, ActorRef],
+      taskBatch: Map[PartitionId, Seq[Task]],
+      requestTimeout: FiniteDuration,
+      replyTo: ActorRef
+    ): Props = {
+    Props(new PersistRequestActor(partitionSupervisors, taskBatch, requestTimeout, replyTo))
+  }
 
   private class PersistRequestActor(
-    partitionSupervisors: Map[PartitionId, ActorRef],
-    taskBatch: Map[PartitionId, Seq[Task]],
-    requestTimeout: FiniteDuration,
-    replyTo: ActorRef
-  )
-      extends Actor with ActorLogging {
+      partitionSupervisors: Map[PartitionId, ActorRef],
+      taskBatch: Map[PartitionId, Seq[Task]],
+      requestTimeout: FiniteDuration,
+      replyTo: ActorRef)
+      extends Actor
+      with ActorLogging {
     import context.dispatcher
 
     for ((partitionId, tasks) <- taskBatch) {
@@ -102,21 +102,21 @@ object TopicSupervisor {
 }
 
 /**
- * Main point of entry into the actor system, and the root supervisor. This actor splits each
- * multi-partition message into several per-partition messages and forwards them to
- * corresponding PartitionSupervisors.
- *
- * @param partitions
- * @param queueContext
- * @param partitionSupervisorFactory
- */
+  * Main point of entry into the actor system, and the root supervisor. This actor splits each
+  * multi-partition message into several per-partition messages and forwards them to
+  * corresponding PartitionSupervisors.
+  *
+  * @param partitions
+  * @param queueContext
+  * @param partitionSupervisorFactory
+  */
 class TopicSupervisor(
-  settings: Settings,
-  queueContext: QueueContext,
-  partitions: Set[PartitionId],
-  partitionSupervisorFactory: (ActorRefFactory, PartitionId, QueueContext) => ActorRef
-)
-    extends Actor with ActorLogging {
+    settings: Settings,
+    queueContext: QueueContext,
+    partitions: Set[PartitionId],
+    partitionSupervisorFactory: (ActorRefFactory, PartitionId, QueueContext) => ActorRef)
+    extends Actor
+    with ActorLogging {
   import TopicSupervisor._
   override val supervisorStrategy =
     Supervision.makeAlwaysEscalateTopicSupervisorStrategy(queueContext.logging)
@@ -137,7 +137,10 @@ class TopicSupervisor(
 
   def sendToPartitions(taskBatch: Map[PartitionId, Seq[Task]]): Unit = {
     val perRequestActorProps = makePersistRequestActorProps(
-      partitionSupervisors, taskBatch, persistRequestTimeout, sender
+      partitionSupervisors,
+      taskBatch,
+      persistRequestTimeout,
+      sender
     )
     context.actorOf(perRequestActorProps)
   }

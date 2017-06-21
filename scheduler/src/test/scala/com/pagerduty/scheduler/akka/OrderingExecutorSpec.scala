@@ -4,7 +4,7 @@ import akka.actor._
 import akka.testkit.TestProbe
 import com.pagerduty.eris.TimeUuid
 import com.pagerduty.scheduler.model.Task
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 import org.scalamock.scalatest.PathMockFactory
 
 class OrderingExecutorSpec extends ActorPathFreeSpec("OrderingExecutorSpec") with PathMockFactory {
@@ -20,13 +20,17 @@ class OrderingExecutorSpec extends ActorPathFreeSpec("OrderingExecutorSpec") wit
     val taskExecutorStub = TestProbe()
     val taskExecutorFactory = null
 
-    val orderingExecutorProps = Props(new OrderingExecutor(
-      orderingId, partitionExecutor.testActor, taskExecutorFactory
-    ) {
-      override def execute(task: Task): Unit = {
-        taskExecutorStub.ref ! ExecuteTaskRequest(task)
+    val orderingExecutorProps = Props(
+      new OrderingExecutor(
+        orderingId,
+        partitionExecutor.testActor,
+        taskExecutorFactory
+      ) {
+        override def execute(task: Task): Unit = {
+          taskExecutorStub.ref ! ExecuteTaskRequest(task)
+        }
       }
-    })
+    )
     val orderingExecutor = system.actorOf(orderingExecutorProps)
 
     "run tasks immediately when idle" in {

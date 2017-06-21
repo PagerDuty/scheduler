@@ -1,11 +1,11 @@
 package com.pagerduty.scheduler.admin
 
-import com.pagerduty.scheduler.admin.model.{ AdminTask, TaskDetails }
-import com.pagerduty.scheduler.dao.{ AttemptHistoryDao, TaskScheduleDao, TaskStatusDao }
+import com.pagerduty.scheduler.admin.model.{AdminTask, TaskDetails}
+import com.pagerduty.scheduler.dao.{AttemptHistoryDao, TaskScheduleDao, TaskStatusDao}
 import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task._
-import com.pagerduty.scheduler.model.{ CompletionResult, Task, TaskKey, TaskStatus }
-import com.pagerduty.scheduler.specutil.{ FreeUnitSpec, TaskFactory }
+import com.pagerduty.scheduler.model.{CompletionResult, Task, TaskKey, TaskStatus}
+import com.pagerduty.scheduler.specutil.{FreeUnitSpec, TaskFactory}
 import java.time.Instant
 import java.util.NoSuchElementException
 import org.scalamock.scalatest.MockFactory
@@ -42,7 +42,8 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
       val dropSuccess: Future[Unit] = Future.successful(Unit)
       for (taskKey <- taskKeys) {
         val partitionIds = Set(taskKey.partitionId(kafkaNumPartitions))
-        (mockTaskStatusDao.dropTaskOnPartitions(_, _))
+        (mockTaskStatusDao
+          .dropTaskOnPartitions(_, _))
           .when(partitionIds, taskKey)
           .returns(dropSuccess)
       }
@@ -50,7 +51,8 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
       adminService.dropTasks(taskKeys).futureValue
       for (taskKey <- taskKeys) {
         val partitionIds = Set(taskKey.partitionId(kafkaNumPartitions))
-        (mockTaskStatusDao.dropTaskOnPartitions(_, _))
+        (mockTaskStatusDao
+          .dropTaskOnPartitions(_, _))
           .verify(partitionIds, taskKey)
       }
       mockRebalanceFunction.verify()
@@ -68,16 +70,19 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
         trait DaoCallsSucceedTestContext extends FetchTaskTestContext {
           val taskStatus = TaskStatus(1, CompletionResult.Success, None)
           val attempts = Seq()
-          (mockTaskStatusDao.getStatus(_, _))
+          (mockTaskStatusDao
+            .getStatus(_, _))
             .when(partitionId, task.taskKey)
             .returns(Future.successful(taskStatus))
-          (mockAttemptHistoryDao.load(_, _, _))
+          (mockAttemptHistoryDao
+            .load(_, _, _))
             .when(partitionId, task.taskKey, limit)
             .returns(Future.successful(attempts))
         }
 
         "and the task exists in the schedule" in new DaoCallsSucceedTestContext {
-          (mockTaskScheduleDao.find(_, _))
+          (mockTaskScheduleDao
+            .find(_, _))
             .when(partitionId, task.taskKey)
             .returns(Future.successful(Some(task)))
 
@@ -96,7 +101,8 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
         }
 
         "and the task doesn't exist in the schedule" in new DaoCallsSucceedTestContext {
-          (mockTaskScheduleDao.find(_, _))
+          (mockTaskScheduleDao
+            .find(_, _))
             .when(partitionId, task.taskKey)
             .returns(Future.successful(None))
 
@@ -121,17 +127,20 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
           val taskStatus = TaskStatus(1, CompletionResult.Success, None)
           val attempts = Seq()
           def getStatusSucceeds() {
-            (mockTaskStatusDao.getStatus(_, _))
+            (mockTaskStatusDao
+              .getStatus(_, _))
               .when(partitionId, task.taskKey)
               .returns(Future.successful(taskStatus))
           }
           def loadSucceeds() {
-            (mockAttemptHistoryDao.load(_, _, _))
+            (mockAttemptHistoryDao
+              .load(_, _, _))
               .when(partitionId, task.taskKey, limit)
               .returns(Future.successful(attempts))
           }
           def findSucceeds() {
-            (mockTaskScheduleDao.find(_, _))
+            (mockTaskScheduleDao
+              .find(_, _))
               .when(partitionId, task.taskKey)
               .returns(Future.successful(Some(task)))
           }
@@ -140,7 +149,8 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
         "and it's the TaskScheduleDao call" in new OneDaoCallFailsTestContext {
           getStatusSucceeds()
           loadSucceeds()
-          (mockTaskScheduleDao.find(_, _))
+          (mockTaskScheduleDao
+            .find(_, _))
             .when(partitionId, task.taskKey)
             .returns(Future.failed(new IllegalArgumentException("test exception")))
 
@@ -152,7 +162,8 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
         }
 
         "and it's the TaskStatusDao call" in new OneDaoCallFailsTestContext {
-          (mockTaskStatusDao.getStatus(_, _))
+          (mockTaskStatusDao
+            .getStatus(_, _))
             .when(partitionId, task.taskKey)
             .returns(Future.failed(new IllegalArgumentException("test exception")))
           loadSucceeds()
@@ -167,7 +178,8 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
 
         "and it's the AttemptHistoryDao call" in new OneDaoCallFailsTestContext {
           getStatusSucceeds()
-          (mockAttemptHistoryDao.load(_, _, _))
+          (mockAttemptHistoryDao
+            .load(_, _, _))
             .when(partitionId, task.taskKey, limit)
             .returns(Future.failed(new IllegalArgumentException("test exception")))
           findSucceeds()
@@ -193,14 +205,15 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
         val to = from + 1.minute
 
         val limit = 12345
-        (mockTaskScheduleDao.loadTasksFromPartitions(
-          _: Set[PartitionId],
-          _: Instant,
-          _: Option[Task.OrderingId],
-          _: Option[Task.UniquenessKey],
-          _: Instant,
-          _: Int
-        ))
+        (mockTaskScheduleDao
+          .loadTasksFromPartitions(
+            _: Set[PartitionId],
+            _: Instant,
+            _: Option[Task.OrderingId],
+            _: Option[Task.UniquenessKey],
+            _: Instant,
+            _: Int
+          ))
           .when(
             kafkaPartitions,
             from,
@@ -251,14 +264,15 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
             task3PartitionId -> IndexedSeq(task3)
           )
 
-          (mockTaskScheduleDao.loadTasksFromPartitions(
-            _: Set[PartitionId],
-            _: Instant,
-            _: Option[Task.OrderingId],
-            _: Option[Task.UniquenessKey],
-            _: Instant,
-            _: Int
-          ))
+          (mockTaskScheduleDao
+            .loadTasksFromPartitions(
+              _: Set[PartitionId],
+              _: Instant,
+              _: Option[Task.OrderingId],
+              _: Option[Task.UniquenessKey],
+              _: Instant,
+              _: Int
+            ))
             .when(
               kafkaPartitions,
               from,
@@ -275,23 +289,28 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
           val taskStatus2 = TaskStatus(2, CompletionResult.Failure, Some(task2.scheduledTime + 1.minute))
           val taskStatus3 = TaskStatus(3, CompletionResult.Dropped, None)
 
-          (mockTaskStatusDao.getStatus(_, _))
+          (mockTaskStatusDao
+            .getStatus(_, _))
             .when(task1PartitionId, task1.taskKey)
             .returns(Future.successful(taskStatus1))
-          (mockTaskStatusDao.getStatus(_, _))
+          (mockTaskStatusDao
+            .getStatus(_, _))
             .when(task2PartitionId, task2.taskKey)
             .returns(Future.successful(taskStatus2))
-          (mockTaskStatusDao.getStatus(_, _))
+          (mockTaskStatusDao
+            .getStatus(_, _))
             .when(task3PartitionId, task3.taskKey)
             .returns(Future.successful(taskStatus3))
 
-          val result = adminService.fetchIncompleteTasks(
-            from,
-            Some(fromOrderingId),
-            Some(fromUniquenessKey),
-            to,
-            limit
-          ).futureValue
+          val result = adminService
+            .fetchIncompleteTasks(
+              from,
+              Some(fromOrderingId),
+              Some(fromUniquenessKey),
+              to,
+              limit
+            )
+            .futureValue
 
           result should have size (limit)
           val result0 = result(0)
@@ -324,13 +343,16 @@ class AdminServiceSpec extends FreeUnitSpec with ScalaFutures with MockFactory {
             val taskStatus1 = TaskStatus(1, CompletionResult.Success, None)
             val taskStatus2 = TaskStatus(2, CompletionResult.Failure, Some(task2.scheduledTime + 1.minute))
 
-            (mockTaskStatusDao.getStatus(_, _))
+            (mockTaskStatusDao
+              .getStatus(_, _))
               .when(task1PartitionId, task1.taskKey)
               .returns(Future.successful(taskStatus1))
-            (mockTaskStatusDao.getStatus(_, _))
+            (mockTaskStatusDao
+              .getStatus(_, _))
               .when(task2PartitionId, task2.taskKey)
               .returns(Future.successful(taskStatus2))
-            (mockTaskStatusDao.getStatus(_, _))
+            (mockTaskStatusDao
+              .getStatus(_, _))
               .when(task3PartitionId, task3.taskKey)
               .returns(Future.failed(new NumberFormatException("test exception")))
 

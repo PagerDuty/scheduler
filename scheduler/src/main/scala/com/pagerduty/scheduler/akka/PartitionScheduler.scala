@@ -5,7 +5,7 @@ import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.akka.PartitionExecutor.ExecutePartitionTask
 import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task.PartitionId
-import com.pagerduty.scheduler.model.{ Task, TaskKey }
+import com.pagerduty.scheduler.model.{Task, TaskKey}
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration._
@@ -15,28 +15,22 @@ object PartitionScheduler {
 
   private case object TaskIsDue
 
-  def props(
-    partitionId: PartitionId, partitionExecutor: ActorRef, logging: Scheduler.Logging
-  ): Props = {
+  def props(partitionId: PartitionId, partitionExecutor: ActorRef, logging: Scheduler.Logging): Props = {
     Props(new PartitionScheduler(partitionId, partitionExecutor, logging))
   }
 }
 
 /**
- * Holds scheduled tasks in memory till they are due and then sends them
- * to the given ParitionExecutor.
- *
- * Tasks should be sent in a ScheduleTasks message. The tasks in this
- * message must be in scheduledTime order i.e. the one due the earliest
- * should be the first in the tasks Seq.
- *
- * Due and overdue tasks will be dispatched immediately.
- */
-class PartitionScheduler(
-  partitionId: PartitionId,
-  partitionExecutor: ActorRef,
-  logging: Scheduler.Logging
-)
+  * Holds scheduled tasks in memory till they are due and then sends them
+  * to the given ParitionExecutor.
+  *
+  * Tasks should be sent in a ScheduleTasks message. The tasks in this
+  * message must be in scheduledTime order i.e. the one due the earliest
+  * should be the first in the tasks Seq.
+  *
+  * Due and overdue tasks will be dispatched immediately.
+  */
+class PartitionScheduler(partitionId: PartitionId, partitionExecutor: ActorRef, logging: Scheduler.Logging)
     extends Actor
     with ActorLogging {
   import PartitionScheduler._

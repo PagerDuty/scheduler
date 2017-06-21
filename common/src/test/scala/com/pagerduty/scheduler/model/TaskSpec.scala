@@ -2,7 +2,7 @@ package com.pagerduty.scheduler.model
 
 import java.time.Instant
 import java.util.UUID
-import org.scalatest.{ Matchers, WordSpecLike }
+import org.scalatest.{Matchers, WordSpecLike}
 
 class TaskSpec extends WordSpecLike with Matchers {
   "A Task" should {

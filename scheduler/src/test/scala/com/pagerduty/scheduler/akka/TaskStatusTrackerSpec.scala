@@ -5,10 +5,9 @@ import org.scalamock.scalatest.PathMockFactory
 import scala.concurrent.Future
 import com.pagerduty.scheduler.dao.TaskStatusDao
 import com.pagerduty.scheduler.model.TaskStatus
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 
-class TaskStatusTrackerSpec extends ActorPathFreeSpec("TaskStatusTrackerSpec")
-    with PathMockFactory {
+class TaskStatusTrackerSpec extends ActorPathFreeSpec("TaskStatusTrackerSpec") with PathMockFactory {
   import TaskStatusTracker._
   import TaskExecutor._
 
@@ -22,7 +21,9 @@ class TaskStatusTrackerSpec extends ActorPathFreeSpec("TaskStatusTrackerSpec")
 
     "it receives a UpdateTaskStatus message" - {
       "status is persisted successfully" - {
-        (mockTaskStatusDao.insert(_, _, _)).expects(partitionId, taskKey, taskStatus)
+        (mockTaskStatusDao
+          .insert(_, _, _))
+          .expects(partitionId, taskKey, taskStatus)
           .returning(Future.successful(()))
 
         "send a TaskStatusUpdated to the requester" in {
@@ -34,7 +35,9 @@ class TaskStatusTrackerSpec extends ActorPathFreeSpec("TaskStatusTrackerSpec")
       "status is not persisted successfully" - {
         val failureTaskKey = TaskFactory.makeTask().taskKey
         val exception = new Exception
-        (mockTaskStatusDao.insert(_, _, _)).expects(partitionId, failureTaskKey, taskStatus)
+        (mockTaskStatusDao
+          .insert(_, _, _))
+          .expects(partitionId, failureTaskKey, taskStatus)
           .returning(Future.failed(exception))
 
         "send a TaskStatusUpdated to the requester" in {
@@ -45,7 +48,9 @@ class TaskStatusTrackerSpec extends ActorPathFreeSpec("TaskStatusTrackerSpec")
 
       "it receives a FetchTaskStatus message" - {
         "status is found successfully" - {
-          (mockTaskStatusDao.getStatus(_, _)).expects(partitionId, taskKey)
+          (mockTaskStatusDao
+            .getStatus(_, _))
+            .expects(partitionId, taskKey)
             .returning(Future.successful(taskStatus))
 
           "send a TaskStatusFetched to the requester" in {
@@ -57,7 +62,9 @@ class TaskStatusTrackerSpec extends ActorPathFreeSpec("TaskStatusTrackerSpec")
         "status is not found successfully" - {
           val failureTaskKey = TaskFactory.makeTask().taskKey
           val exception = new Exception("Failure getting task completion")
-          (mockTaskStatusDao.getStatus(_, _)).expects(partitionId, failureTaskKey)
+          (mockTaskStatusDao
+            .getStatus(_, _))
+            .expects(partitionId, failureTaskKey)
             .returning(Future.failed(exception))
 
           "send a TaskStatusNotFetched to the requester" in {

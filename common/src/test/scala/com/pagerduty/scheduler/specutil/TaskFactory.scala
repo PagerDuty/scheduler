@@ -2,7 +2,7 @@ package com.pagerduty.scheduler.specutil
 
 import com.pagerduty.eris.TimeUuid
 import com.pagerduty.scheduler.datetimehelpers._
-import com.pagerduty.scheduler.model.{ Task, TaskKey }
+import com.pagerduty.scheduler.model.{Task, TaskKey}
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import scala.concurrent.duration._
@@ -25,16 +25,14 @@ object TaskFactory {
   }
 
   def makeTasks(
-    count: Int,
-    scheduledTime: Instant = timeNowFlooredToMs,
-    spacing: Duration = 0.seconds
-  ): IndexedSeq[Task] = {
+      count: Int,
+      scheduledTime: Instant = timeNowFlooredToMs,
+      spacing: Duration = 0.seconds
+    ): IndexedSeq[Task] = {
     for (i <- 0 until count) yield TaskFactory.makeTask(scheduledTime + (spacing * i))
   }
 
-  def makeTasksInConsecutiveBuckets(
-    rowTimeBucketDuration: Duration
-  ): (Seq[Task], Seq[Task]) = {
+  def makeTasksInConsecutiveBuckets(rowTimeBucketDuration: Duration): (Seq[Task], Seq[Task]) = {
     val currentTimeBucket = Instant.now()
     val nextTimeBucket = currentTimeBucket + rowTimeBucketDuration
     val tasks = for (i <- 0 to 5) yield TaskFactory.makeTask()

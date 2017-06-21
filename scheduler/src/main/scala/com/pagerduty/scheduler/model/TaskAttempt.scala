@@ -2,11 +2,11 @@ package com.pagerduty.scheduler.model
 
 import java.time.Instant
 import org.json4s.DefaultFormats
-import org.json4s.jackson.Serialization.{ read, write }
+import org.json4s.jackson.Serialization.{read, write}
 
 /**
- * Captures results of a task attempt for troubleshooting.
- */
+  * Captures results of a task attempt for troubleshooting.
+  */
 case class TaskAttempt(
     attemptNumber: Int,
     startedAt: Instant,
@@ -15,8 +15,7 @@ case class TaskAttempt(
     taskResultUpdatedAt: Instant,
     exceptionClass: Option[String],
     exceptionMessage: Option[String],
-    exceptionStackTrace: Option[String]
-) {
+    exceptionStackTrace: Option[String]) {
   implicit val formats = DefaultFormats + new TaskKeyTimeSerializer + new CompletionResultSerializer
 
   def toJson: String = write(this)
@@ -24,13 +23,13 @@ case class TaskAttempt(
 
 object TaskAttempt {
   def apply(
-    attemptNumber: Int,
-    startedAt: Instant,
-    finishedAt: Instant,
-    taskResult: CompletionResult,
-    taskResultUpdatedAt: Instant,
-    exception: Option[Throwable]
-  ): TaskAttempt = {
+      attemptNumber: Int,
+      startedAt: Instant,
+      finishedAt: Instant,
+      taskResult: CompletionResult,
+      taskResultUpdatedAt: Instant,
+      exception: Option[Throwable]
+    ): TaskAttempt = {
     TaskAttempt(
       attemptNumber,
       startedAt,

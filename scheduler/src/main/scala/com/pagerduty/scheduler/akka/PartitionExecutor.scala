@@ -2,28 +2,33 @@ package com.pagerduty.scheduler.akka
 
 import com.pagerduty.scheduler.akka.OrderingExecutor.ExecuteOrderingTask
 import akka.actor._
-import com.pagerduty.scheduler.model.{ Task, TaskKey }
+import com.pagerduty.scheduler.model.{Task, TaskKey}
 
-import scala.collection.mutable.{ Map, Set }
+import scala.collection.mutable.{Map, Set}
 import scala.language.postfixOps
 
 object PartitionExecutor {
   case class Initialize(partitionContext: PartitionContext)
 
   /**
-   * Request for a task to be executed
-   *
-   * @param task
-   */
+    * Request for a task to be executed
+    *
+    * @param task
+    */
   case class ExecutePartitionTask(task: Task)
 
   def props(settings: Settings): Props = {
     val orderingExecutorFactory = {
-      (context: ActorRefFactory, partitionContext: PartitionContext, orderingId: Task.OrderingId,
-      partitionExecutor: ActorRef) =>
+      (context: ActorRefFactory,
+       partitionContext: PartitionContext,
+       orderingId: Task.OrderingId,
+       partitionExecutor: ActorRef) =>
         {
           val orderingExecutorProps = OrderingExecutor.props(
-            settings, partitionContext, orderingId, partitionExecutor
+            settings,
+            partitionContext,
+            orderingId,
+            partitionExecutor
           )
           context.actorOf(orderingExecutorProps)
         }
@@ -33,20 +38,18 @@ object PartitionExecutor {
 }
 
 /**
- * Partition executor manages the execution of tasks for a partition. It spawns OrderingExecutors
- * for each unique `orderingId` and also sends the throughput controller the number of tasks in flight
- * for the partition.
- *
- * @param orderingExecutorFactory
- */
+  * Partition executor manages the execution of tasks for a partition. It spawns OrderingExecutors
+  * for each unique `orderingId` and also sends the throughput controller the number of tasks in flight
+  * for the partition.
+  *
+  * @param orderingExecutorFactory
+  */
 class PartitionExecutor(
-  orderingExecutorFactory: (ActorRefFactory, PartitionContext, Task.OrderingId, ActorRef) => ActorRef
-)
-    extends Actor with ActorLogging with Stash {
-  case class OrderingExecutorData(
-    tasks: Set[TaskKey],
-    orderingExecutor: ActorRef
-  )
+    orderingExecutorFactory: (ActorRefFactory, PartitionContext, Task.OrderingId, ActorRef) => ActorRef)
+    extends Actor
+    with ActorLogging
+    with Stash {
+  case class OrderingExecutorData(tasks: Set[TaskKey], orderingExecutor: ActorRef)
   import PartitionExecutor._
   var partitionContext: PartitionContext = _
   def partitionId = partitionContext.partitionId

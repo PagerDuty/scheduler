@@ -10,10 +10,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import scalaj.http.Http
 
-class StandaloneAdminHttpServerSpec
-  extends CassandraIntegrationSpec
-  with Matchers
-  with BeforeAndAfterAll {
+class StandaloneAdminHttpServerSpec extends CassandraIntegrationSpec with Matchers with BeforeAndAfterAll {
 
   val config = ConfigFactory.load()
 
@@ -36,8 +33,8 @@ class StandaloneAdminHttpServerSpec
 
     "should initialize properly and serve requests" in {
       val response = Http(s"http://localhost:$port/$namespace/api/v1/status").asString
-      response.code should equal (200)
-      response.body should include ("Scheduler Admin API is running")
+      response.code should equal(200)
+      response.body should include("Scheduler Admin API is running")
     }
   }
 }

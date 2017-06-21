@@ -1,13 +1,13 @@
 package com.pagerduty.scheduler.akka
 
-import akka.testkit.{ TestFSMRef, TestProbe }
+import akka.testkit.{TestFSMRef, TestProbe}
 import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.dao.TaskScheduleDao
-import com.pagerduty.scheduler.model.{ Task, TaskKey }
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.model.{Task, TaskKey}
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 import java.time.Instant
 import org.scalamock.scalatest.PathMockFactory
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
 
 class TaskPersistenceSpec extends ActorPathFreeSpec("TaskPersistenceSpec") with PathMockFactory {
@@ -22,8 +22,11 @@ class TaskPersistenceSpec extends ActorPathFreeSpec("TaskPersistenceSpec") with 
     val partitionScheduler = TestProbe()
     val throughputController = TestProbe()
     val taskPersistenceArgs = TaskPersistenceArgs(
-      settings, partitionId, taskScheduleDao,
-      partitionScheduler.testActor, throughputController.testActor
+      settings,
+      partitionId,
+      taskScheduleDao,
+      partitionScheduler.testActor,
+      throughputController.testActor
     )
     val taskPersistence = TestFSMRef(new TaskPersistence(taskPersistenceArgs))
     val taskCount = 2
@@ -67,7 +70,8 @@ class TaskPersistenceSpec extends ActorPathFreeSpec("TaskPersistenceSpec") with 
       val ReadCheckpoint(readCheckpoint) = taskPersistence.underlyingActor.stateData
       val upperBound = readCheckpoint.scheduledTime + 1.hour
       val limit = 200
-      (taskScheduleDao.load _).expects(partitionId, readCheckpoint, upperBound, limit)
+      (taskScheduleDao.load _)
+        .expects(partitionId, readCheckpoint, upperBound, limit)
         .returns(Future.successful(tasks))
 
       taskPersistence ! LoadTasks(upperBound, limit)
@@ -92,7 +96,8 @@ class TaskPersistenceSpec extends ActorPathFreeSpec("TaskPersistenceSpec") with 
 
         // Query results under limit indicate range is full loaded.
         val limit = resultTasks.size + 1
-        (taskScheduleDao.load _).expects(partitionId, readCheckpoint, upperBound, limit)
+        (taskScheduleDao.load _)
+          .expects(partitionId, readCheckpoint, upperBound, limit)
           .returns(Future.successful(resultTasks))
 
         taskPersistence ! LoadTasks(upperBound, limit)
@@ -110,7 +115,8 @@ class TaskPersistenceSpec extends ActorPathFreeSpec("TaskPersistenceSpec") with 
         val limit = resultTasks.size
         val latestTaskKey = resultTasks.last.taskKey
         val latestTaskTime = latestTaskKey.scheduledTime
-        (taskScheduleDao.load _).expects(partitionId, readCheckpoint, upperBound, limit)
+        (taskScheduleDao.load _)
+          .expects(partitionId, readCheckpoint, upperBound, limit)
           .returns(Future.successful(resultTasks))
 
         taskPersistence ! LoadTasks(upperBound, limit)

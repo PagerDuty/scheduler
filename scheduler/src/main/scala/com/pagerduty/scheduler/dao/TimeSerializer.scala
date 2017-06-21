@@ -9,8 +9,9 @@ object TimeSerializer {
   def toLocalDateTime(d: Date): Instant = d.toInstant()
 }
 
-class TimeSerializer extends ProxySerializer[Instant, Date](
-  toRepresentation = TimeSerializer.toDate(_),
-  fromRepresentation = TimeSerializer.toLocalDateTime(_),
-  DateSerializer
-)
+class TimeSerializer
+    extends ProxySerializer[Instant, Date](
+      toRepresentation = TimeSerializer.toDate(_),
+      fromRepresentation = TimeSerializer.toLocalDateTime(_),
+      DateSerializer
+    )

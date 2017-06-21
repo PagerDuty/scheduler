@@ -16,8 +16,7 @@ import org.scalatest.{MustMatchers, fixture}
 import scala.concurrent.duration._
 import scala.util.Random
 
-class TaskScheduleDaoSpec
-    extends fixture.WordSpec with MustMatchers with DaoFixture with TestTimer with ScalaFutures {
+class TaskScheduleDaoSpec extends fixture.WordSpec with MustMatchers with DaoFixture with TestTimer with ScalaFutures {
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(3, Seconds)))
 
   type FixtureParam = TaskScheduleDaoImpl
@@ -76,17 +75,18 @@ class TaskScheduleDaoSpec
 
       dao.insert(partitionId, tasks).futureValue
 
-      val from = TaskKey.lowerBound(key3.scheduledTime, Some(key3.orderingId), Some(key3
-        .uniquenessKey))
+      val from = TaskKey.lowerBound(key3.scheduledTime, Some(key3.orderingId), Some(key3.uniquenessKey))
       val persistedTasks1 = dao.load(partitionId, from, now + 1.second, limit).futureValue
-      val persistedTasks2 = dao.load(
-        partitionId,
-        from.scheduledTime,
-        Some(from.orderingId),
-        Some(from.uniquenessKey),
-        now + 1.second,
-        limit
-      ).futureValue
+      val persistedTasks2 = dao
+        .load(
+          partitionId,
+          from.scheduledTime,
+          Some(from.orderingId),
+          Some(from.uniquenessKey),
+          now + 1.second,
+          limit
+        )
+        .futureValue
 
       persistedTasks1 mustBe Seq(tasks(2))
       persistedTasks2 mustBe Seq(tasks(2))
@@ -162,7 +162,6 @@ class TaskScheduleDaoSpec
     }
 
     "load tasks from a given set of partitions" in { dao =>
-
       val partitionIds: Set[PartitionId] = Seq(5, 70).toSet
       var manuallyMappedTasks = Map[PartitionId, IndexedSeq[Task]]()
       val tasks = TaskFactory.makeTasks(partitionIds.size)
@@ -173,8 +172,8 @@ class TaskScheduleDaoSpec
         }
       }
       var tasksFromCassandra = Map[PartitionId, IndexedSeq[Task]]()
-      tasksFromCassandra = dao.loadTasksFromPartitions(partitionIds, Instant.now() - 2.hours,
-        Instant.now(), 10).futureValue
+      tasksFromCassandra =
+        dao.loadTasksFromPartitions(partitionIds, Instant.now() - 2.hours, Instant.now(), 10).futureValue
 
       tasksFromCassandra.foreach {
         case (key, _) =>

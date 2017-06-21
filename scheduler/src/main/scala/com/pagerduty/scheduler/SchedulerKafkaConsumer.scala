@@ -1,41 +1,40 @@
 package com.pagerduty.scheduler
 
-import java.util.{ Collection, Properties }
+import java.util.{Collection, Properties}
 
-import com.netflix.astyanax.{ Cluster, Keyspace }
+import com.netflix.astyanax.{Cluster, Keyspace}
 import com.pagerduty.scheduler.akka.SchedulingSystem
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
 import com.typesafe.config.Config
-import org.apache.kafka.clients.consumer.{ ConsumerRebalanceListener, ConsumerRecord, ConsumerRecords }
+import org.apache.kafka.clients.consumer.{ConsumerRebalanceListener, ConsumerRecord, ConsumerRecords}
 import org.apache.kafka.common.TopicPartition
-import com.pagerduty.kafkaconsumer.{ ConsumerMetrics, SimpleKafkaConsumer }
+import com.pagerduty.kafkaconsumer.{ConsumerMetrics, SimpleKafkaConsumer}
 import com.pagerduty.metrics.Metrics
 
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
- * The kafka consumer used by the scheduler. It consumes the messages created when a task is
- * scheduled and spawns the scheduling actor system to schedule and execute tasks.
- * @param schedulerSettings
- * @param config
- * @param cluster
- * @param keyspace
- * @param kafkaConsumerProperties
- * @param taskExecutorServiceFactory
- */
+  * The kafka consumer used by the scheduler. It consumes the messages created when a task is
+  * scheduled and spawns the scheduling actor system to schedule and execute tasks.
+  * @param schedulerSettings
+  * @param config
+  * @param cluster
+  * @param keyspace
+  * @param kafkaConsumerProperties
+  * @param taskExecutorServiceFactory
+  */
 class SchedulerKafkaConsumer(
-  schedulerSettings: SchedulerSettings,
-  config: Config,
-  cluster: Cluster,
-  keyspace: Keyspace,
-  kafkaConsumerProperties: Properties,
-  taskExecutorServiceFactory: Set[PartitionId] => TaskExecutorService,
-  logging: Scheduler.Logging,
-  metrics: Metrics
-)
+    schedulerSettings: SchedulerSettings,
+    config: Config,
+    cluster: Cluster,
+    keyspace: Keyspace,
+    kafkaConsumerProperties: Properties,
+    taskExecutorServiceFactory: Set[PartitionId] => TaskExecutorService,
+    logging: Scheduler.Logging,
+    metrics: Metrics)
     extends SimpleKafkaConsumer[String, String](
       schedulerSettings.kafkaTopic,
       kafkaConsumerProperties,
@@ -89,10 +88,10 @@ class SchedulerKafkaConsumer(
   }
 
   /**
-   * Listens for changes in partitions and shuts down the entire system upon a change in the
-   * number of partitions
-   *
-   */
+    * Listens for changes in partitions and shuts down the entire system upon a change in the
+    * number of partitions
+    *
+    */
   override protected def makeRebalanceListener() = new ConsumerRebalanceListener {
     def partitionIdSet(partitions: Collection[TopicPartition]): Set[PartitionId] = {
       val filteredPartitions = partitions.filter(_.topic == topic)
@@ -111,17 +110,23 @@ class SchedulerKafkaConsumer(
         val schedulerPartitions = partitionIdSet(partitionAssignment)
         logging.reportPartitionsAssigned(schedulerPartitions)
         new SchedulingSystem(
-          config, cluster, keyspace, schedulerPartitions, taskExecutorServiceFactory, logging, metrics
+          config,
+          cluster,
+          keyspace,
+          schedulerPartitions,
+          taskExecutorServiceFactory,
+          logging,
+          metrics
         )
       }
     }
   }
 
   /**
-   * Processes the records sent by the kafka producer, deserializes the tasks and proceeds to
-   * schedule them. Upon failure, it will shut down the entire scheduling system.
-   *
-   */
+    * Processes the records sent by the kafka producer, deserializes the tasks and proceeds to
+    * schedule them. Upon failure, it will shut down the entire scheduling system.
+    *
+    */
   protected def processRecords(records: ConsumerRecords[String, String]): Unit = {
     initializedSchedulingSystem match {
       case Success(system) => sendDeserializedRecordsToSchedulingSystem(system, records)
@@ -130,9 +135,9 @@ class SchedulerKafkaConsumer(
   }
 
   protected def sendDeserializedRecordsToSchedulingSystem(
-    schedulingSystem: SchedulingSystem,
-    records: ConsumerRecords[String, String]
-  ): Unit = {
+      schedulingSystem: SchedulingSystem,
+      records: ConsumerRecords[String, String]
+    ): Unit = {
     val deserializedBatch = deserializeTaskBatch(records)
     schedulingSystem.persistAndSchedule(deserializedBatch)
   }

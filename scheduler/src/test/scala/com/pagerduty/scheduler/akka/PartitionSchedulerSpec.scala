@@ -5,15 +5,14 @@ import com.pagerduty.eris.TimeUuid
 import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.akka.PartitionExecutor.ExecutePartitionTask
 import com.pagerduty.scheduler.datetimehelpers._
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 import java.time.Instant
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.concurrent.Eventually
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class PartitionSchedulerSpec extends ActorPathFreeSpec("PartitionSchedulerSpec")
-    with PathMockFactory with Eventually {
+class PartitionSchedulerSpec extends ActorPathFreeSpec("PartitionSchedulerSpec") with PathMockFactory with Eventually {
   import PartitionScheduler._
   val partitionId = 3
 
@@ -21,7 +20,9 @@ class PartitionSchedulerSpec extends ActorPathFreeSpec("PartitionSchedulerSpec")
     val partitionExecutorProbe = TestProbe()
     val scheduler = TestActorRef[PartitionScheduler](
       PartitionScheduler.props(
-        partitionId, partitionExecutorProbe.testActor, stub[Scheduler.Logging]
+        partitionId,
+        partitionExecutorProbe.testActor,
+        stub[Scheduler.Logging]
       )
     )
 

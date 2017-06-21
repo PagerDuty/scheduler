@@ -3,15 +3,12 @@ package com.pagerduty.scheduler.model
 import com.pagerduty.scheduler.Partitioner
 import com.pagerduty.scheduler.model.Task.PartitionId
 import java.time.format.DateTimeFormatter
-import java.time.{ Instant, ZoneOffset }
+import java.time.{Instant, ZoneOffset}
 import org.json4s.CustomSerializer
 import org.json4s.JsonAST.JString
 
-case class TaskKey(
-    scheduledTime: Instant,
-    orderingId: Task.OrderingId,
-    uniquenessKey: Task.UniquenessKey
-) extends Ordered[TaskKey] {
+case class TaskKey(scheduledTime: Instant, orderingId: Task.OrderingId, uniquenessKey: Task.UniquenessKey)
+    extends Ordered[TaskKey] {
   def asTuple: (Instant, Task.OrderingId, Task.UniquenessKey) = TaskKey.unapply(this).get
 
   def compare(that: TaskKey): Int = {
@@ -30,9 +27,9 @@ case class TaskKey(
   }
 
   /**
-   * This method calculates a Kafka partitionId for the task key. It is a direct copy of the
-   * partitioning logic found in org.apache.kafka.clients.producer.internals.DefaultPartitioner.
-   */
+    * This method calculates a Kafka partitionId for the task key. It is a direct copy of the
+    * partitioning logic found in org.apache.kafka.clients.producer.internals.DefaultPartitioner.
+    */
   def partitionId(numPartitions: Int): PartitionId = {
     val partitionKeyBytes = orderingId.getBytes("UTF8")
 
@@ -46,10 +43,10 @@ object TaskKey {
     DateTimeFormatter.ofPattern(ScheduledTimeFormat).withZone(ZoneOffset.UTC)
 
   def apply(
-    formattedScheduledTime: String,
-    orderingId: Task.OrderingId,
-    uniquenessKey: Task.UniquenessKey
-  ): TaskKey = {
+      formattedScheduledTime: String,
+      orderingId: Task.OrderingId,
+      uniquenessKey: Task.UniquenessKey
+    ): TaskKey = {
     TaskKey(Instant.parse(formattedScheduledTime), orderingId, uniquenessKey)
   }
 
@@ -60,18 +57,22 @@ object TaskKey {
   }
 
   def lowerBound(
-    scheduledTime: Instant,
-    orderingId: Option[Task.OrderingId] = None,
-    uniquenessKey: Option[Task.UniquenessKey] = None
-  ): TaskKey = {
+      scheduledTime: Instant,
+      orderingId: Option[Task.OrderingId] = None,
+      uniquenessKey: Option[Task.UniquenessKey] = None
+    ): TaskKey = {
     val oId = orderingId.getOrElse("")
     val uKey = uniquenessKey.getOrElse("")
     TaskKey(scheduledTime, oId, uKey)
   }
 }
 
-class TaskKeyTimeSerializer extends CustomSerializer[Instant](format => ({
-  case JString(s) => Instant.parse(s)
-}, {
-  case t: Instant => JString(TaskKey.TimeFormat.format(t))
-}))
+class TaskKeyTimeSerializer
+    extends CustomSerializer[Instant](
+      format =>
+        ({
+          case JString(s) => Instant.parse(s)
+        }, {
+          case t: Instant => JString(TaskKey.TimeFormat.format(t))
+        })
+    )

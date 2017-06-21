@@ -25,10 +25,10 @@ import scala.util.control.NonFatal
 //
 
 abstract class SchedulerIntegrationSpecBase
-  extends CassandraIntegrationSpec
-  with Matchers
-  with BeforeAndAfterAll
-  with Eventually {
+    extends CassandraIntegrationSpec
+    with Matchers
+    with BeforeAndAfterAll
+    with Eventually {
 
   println(s"Started ${getClass.getSimpleName}.")
 
@@ -71,14 +71,24 @@ abstract class SchedulerIntegrationSpecBase
     {
       val schedulerSettings = SchedulerSettings(ConfigFactory.load())
       actualScheduler = new SchedulerImpl(
-        schedulerSettings, config, NullMetrics, cluster, keyspace, taskExecutorServiceFactory
+        schedulerSettings,
+        config,
+        NullMetrics,
+        cluster,
+        keyspace,
+        taskExecutorServiceFactory
       )(
         logging = new Scheduler.LoggingImpl(schedulerSettings, NullMetrics, Some(attemptHistoryDaoImpl))
       )
       actualScheduler.start()
       actualSchedulerClient = {
-        val kafkaProducer = new KafkaProducer[String,String](SchedulerClient.makeKafkaConfig())
-        new SchedulerClient(kafkaProducer, schedulerSettings.kafkaTopic, schedulerSettings.schedulingGraceWindow, NullMetrics)()
+        val kafkaProducer = new KafkaProducer[String, String](SchedulerClient.makeKafkaConfig())
+        new SchedulerClient(
+          kafkaProducer,
+          schedulerSettings.kafkaTopic,
+          schedulerSettings.schedulingGraceWindow,
+          NullMetrics
+        )()
       }
       eventually(timeout(schedulerWarmUpOrSlowTestTimeout)) {
         actualScheduler.arePartitionsAssigned shouldBe true
@@ -94,9 +104,7 @@ abstract class SchedulerIntegrationSpecBase
       Await.result(actualSchedulerClient.scheduleTask(task), Duration.Inf)
     }
 
-    def tasksShouldRunNow(
-      expectedTasks: List[Task], expectedOopsedTasks: List[Task] = Nil
-    ): Unit = {
+    def tasksShouldRunNow(expectedTasks: List[Task], expectedOopsedTasks: List[Task] = Nil): Unit = {
       tasksShouldRunAt(expectedTasks, Instant.now(), expectedOopsedTasks, false)
     }
 
@@ -110,31 +118,25 @@ abstract class SchedulerIntegrationSpecBase
     }
 
     def tasksShouldRunAt(
-      expectedTasks: List[Task],
-      expectedAt: Instant,
-      expectedOopsedTasks: List[Task] = Nil,
-      checkTaskTimes: Boolean = true
-    ): Unit = {
+        expectedTasks: List[Task],
+        expectedAt: Instant,
+        expectedOopsedTasks: List[Task] = Nil,
+        checkTaskTimes: Boolean = true
+      ): Unit = {
       tasksShouldConditionBy(expectedAt, checkTaskTimes) {
         sortedTasks(executedTasks) shouldBe sortedTasks(expectedTasks)
         sortedTasks(oopsedTasks) shouldBe sortedTasks(expectedOopsedTasks)
       }
     }
 
-    def tasksShouldConditionBy(
-      shouldBy: Instant,
-      checkTaskTimes: Boolean
-    )(
-      shouldCondition: => Unit
-    ): Unit = {
+    def tasksShouldConditionBy(shouldBy: Instant, checkTaskTimes: Boolean)(shouldCondition: => Unit): Unit = {
       val timeoutAt = shouldBy + schedulerWarmUpOrSlowTestTimeout
       val timeoutIn = java.time.Duration.between(Instant.now(), timeoutAt).toScalaDuration.max(0.seconds)
       try {
         eventually(timeout(timeoutIn)) {
           shouldCondition
         }
-      }
-      catch {
+      } catch {
         case NonFatal(e) =>
           println(s"###### $e")
           throw new Exception(e)
@@ -154,27 +156,30 @@ abstract class SchedulerIntegrationSpecBase
     def taskRunner(task: Task): Unit = {
       executedTasks = task :: executedTasks
       executedTaskTimes = Instant.now() :: executedTaskTimes
-      task.taskData.get("throw!").foreach(_ => {
-        oopsedTasks = task :: oopsedTasks
-        throw new Exception("Task throws exception for testing purposes.")
-      })
+      task.taskData
+        .get("throw!")
+        .foreach(_ => {
+          oopsedTasks = task :: oopsedTasks
+          throw new Exception("Task throws exception for testing purposes.")
+        })
     }
   }
 }
 
-
 object SchedulerIntegrationSpecBase {
-  def simpleTestExecutorFactory(taskRunner: Task => Unit) = (_: Set[PartitionId]) => new TaskExecutorService {
-    private val executionContext = FixedSizeExecutionContext(2)
+  def simpleTestExecutorFactory(taskRunner: Task => Unit) =
+    (_: Set[PartitionId]) =>
+      new TaskExecutorService {
+        private val executionContext = FixedSizeExecutionContext(2)
 
-    def execute(partitionId: PartitionId, task: Task): Future[Unit] = {
-      Future(
-        taskRunner(task)
-      )(executionContext)
-    }
+        def execute(partitionId: PartitionId, task: Task): Future[Unit] = {
+          Future(
+            taskRunner(task)
+          )(executionContext)
+        }
 
-    def shutdown(): Unit = {
-      executionContext.shutdown()
+        def shutdown(): Unit = {
+          executionContext.shutdown()
+        }
     }
-  }
 }

@@ -1,31 +1,31 @@
 package com.pagerduty.scheduler.dao
 
-import com.netflix.astyanax.{ Cluster, Keyspace }
+import com.netflix.astyanax.{Cluster, Keyspace}
 import com.pagerduty.eris.dao._
 import com.pagerduty.eris.serializers._
 import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.model.Task.PartitionId
-import com.pagerduty.scheduler.model.{ TaskAttempt, TaskKey }
-import com.pagerduty.widerow.{ Bound, EntryColumn }
+import com.pagerduty.scheduler.model.{TaskAttempt, TaskKey}
+import com.pagerduty.widerow.{Bound, EntryColumn}
 import scala.concurrent.duration._
 import scala.concurrent.Future
 
 trait AttemptHistoryDao {
 
   /**
-   * Persist a task attempt.
-   * @param partitionId
-   * @param taskKey
-   * @return
-   */
+    * Persist a task attempt.
+    * @param partitionId
+    * @param taskKey
+    * @return
+    */
   def insert(partitionId: PartitionId, taskKey: TaskKey, taskAttempt: TaskAttempt): Future[Unit]
 
   /**
-   * Load all the task attempts for a given task key.
-   * @param partitionId
-   * @param taskKey
-   * @return
-   */
+    * Load all the task attempts for a given task key.
+    * @param partitionId
+    * @param taskKey
+    * @return
+    */
   def load(partitionId: PartitionId, taskKey: TaskKey, limit: Int): Future[Seq[TaskAttempt]]
 }
 
@@ -34,12 +34,13 @@ object AttemptHistoryDao {
 }
 
 class AttemptHistoryDaoImpl(
-  protected val cluster: Cluster,
-  protected val keyspace: Keyspace,
-  override protected val settings: ErisSettings,
-  columnTtl: Duration = AttemptHistoryDao.ColumnTtl
-)
-    extends AttemptHistoryDao with TaskDaoImpl with Dao {
+    protected val cluster: Cluster,
+    protected val keyspace: Keyspace,
+    override protected val settings: ErisSettings,
+    columnTtl: Duration = AttemptHistoryDao.ColumnTtl)
+    extends AttemptHistoryDao
+    with TaskDaoImpl
+    with Dao {
   type RowKey = (PartitionId, TimeBucketKey)
 
   protected implicit val taskAttemptSerializer = {

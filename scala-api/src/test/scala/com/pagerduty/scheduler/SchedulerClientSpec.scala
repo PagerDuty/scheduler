@@ -5,11 +5,11 @@ import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task
 import java.time.Instant
 import java.util
-import java.util.concurrent.{ ExecutionException, TimeUnit, Future => JFuture }
+import java.util.concurrent.{ExecutionException, TimeUnit, Future => JFuture}
 import org.apache.kafka.clients.producer._
-import org.apache.kafka.common.{ Metric, MetricName, PartitionInfo, TopicPartition }
+import org.apache.kafka.common.{Metric, MetricName, PartitionInfo, TopicPartition}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ Matchers, WordSpecLike }
+import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatest.concurrent.ScalaFutures
 import scala.concurrent.duration._
 

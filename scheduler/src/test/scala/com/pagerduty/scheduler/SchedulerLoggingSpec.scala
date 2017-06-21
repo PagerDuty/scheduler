@@ -4,7 +4,7 @@ import com.pagerduty.scheduler.dao.AttemptHistoryDao
 import com.pagerduty.scheduler.gauge.StaleTasksGauge
 import com.pagerduty.metrics.NullMetrics
 import com.pagerduty.scheduler.model.CompletionResult
-import com.pagerduty.scheduler.specutil.{ TaskAttemptFactory, TaskFactory, UnitSpec }
+import com.pagerduty.scheduler.specutil.{TaskAttemptFactory, TaskFactory, UnitSpec}
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfter
@@ -35,7 +35,10 @@ class SchedulerLoggingSpec extends UnitSpec with MockFactory with BeforeAndAfter
     val mockMetrics = new MockMetrics
     val mockAttemptHistoryDao = mock[AttemptHistoryDao]
     val logging = new Scheduler.LoggingImpl(
-      SchedulerSettings(ConfigFactory.load()), mockMetrics, Some(mockAttemptHistoryDao), mockLogger
+      SchedulerSettings(ConfigFactory.load()),
+      mockMetrics,
+      Some(mockAttemptHistoryDao),
+      mockLogger
     )
     val name = "test_name"
 

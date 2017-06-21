@@ -2,14 +2,18 @@ package com.pagerduty.scheduler
 
 import com.pagerduty.eris.ClusterCtx
 import com.pagerduty.scheduler.model.Task
-import com.pagerduty.scheduler.specutil.{ TaskFactory, UnitSpec }
+import com.pagerduty.scheduler.specutil.{TaskFactory, UnitSpec}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.Matchers
-import org.scalatest.concurrent.{ ScalaFutures, Eventually }
+import org.scalatest.concurrent.{ScalaFutures, Eventually}
 import scala.concurrent.Await
 
 class CassandraTaskExecutorServiceSpec
-    extends UnitSpec with Matchers with Eventually with MockFactory with ScalaFutures {
+    extends UnitSpec
+    with Matchers
+    with Eventually
+    with MockFactory
+    with ScalaFutures {
   val partitionId = 1
 
   val numberOfThreads = 2
