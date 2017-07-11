@@ -10,7 +10,11 @@ import org.scalatest.{MustMatchers, fixture}
 import scala.concurrent.duration._
 
 class AttemptHistoryDaoSpec
-    extends fixture.WordSpec with MustMatchers with DaoFixture with TestTimer with ScalaFutures {
+    extends fixture.WordSpec
+    with MustMatchers
+    with DaoFixture
+    with TestTimer
+    with ScalaFutures {
   import TaskAttemptFactory.makeTaskAttempt
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(3, Seconds)))
 

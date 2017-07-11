@@ -3,13 +3,13 @@ package com.pagerduty.scheduler.admin.http
 import com.pagerduty.metrics.Metrics
 import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.admin.AdminService
-import com.pagerduty.scheduler.admin.model.{ AdminTask, TaskDetails }
-import com.pagerduty.scheduler.model.{ CompletionResult, Task, TaskAttempt, TaskKey }
+import com.pagerduty.scheduler.admin.model.{AdminTask, TaskDetails}
+import com.pagerduty.scheduler.model.{CompletionResult, Task, TaskAttempt, TaskKey}
 import com.pagerduty.scheduler.specutil.TaskFactory
-import com.pagerduty.scheduler.{ Scheduler, SchedulerSettings }
+import com.pagerduty.scheduler.{Scheduler, SchedulerSettings}
 import com.typesafe.config.ConfigFactory
 import java.time.format.DateTimeFormatter
-import java.time.{ Instant, ZoneOffset }
+import java.time.{Instant, ZoneOffset}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.FreeSpecLike
 import org.scalatra.test.scalatest.ScalatraSuite
@@ -45,8 +45,16 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
           val finish = start + 1.second
           val updateAt = finish + 1.second
 
-          val attempt = TaskAttempt(1, start, finish, CompletionResult.Success,
-            updateAt, Some("com.pagerduty.Exception"), Some("Thisisatestexception"), None)
+          val attempt = TaskAttempt(
+            1,
+            start,
+            finish,
+            CompletionResult.Success,
+            updateAt,
+            Some("com.pagerduty.Exception"),
+            Some("Thisisatestexception"),
+            None
+          )
           val attempts = List(attempt)
           val details = TaskDetails(attempts)
 
@@ -87,7 +95,8 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
           }
           """.replaceAll("[ \n]", "")
 
-          (mockAdminService.fetchTaskWithDetails(_: TaskKey, _: Int))
+          (mockAdminService
+            .fetchTaskWithDetails(_: TaskKey, _: Int))
             .expects(key, 20)
             .returns(Future.successful(task))
 
@@ -98,7 +107,8 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
         }
 
         "and the task is not fetched successfully" in {
-          (mockAdminService.fetchTaskWithDetails(_: TaskKey, _: Int))
+          (mockAdminService
+            .fetchTaskWithDetails(_: TaskKey, _: Int))
             .expects(key, 20)
             .returns(Future.failed(new Exception))
 
@@ -150,13 +160,15 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
         """.replaceAll("[ \n]", "")
 
         "and the fetch succeeds" in {
-          (mockAdminService.fetchIncompleteTasks(
-            _: Instant,
-            _: Option[Task.OrderingId],
-            _: Option[Task.UniquenessKey],
-            _: Instant,
-            _: Int
-          )).expects(from, None, None, to, limit)
+          (mockAdminService
+            .fetchIncompleteTasks(
+              _: Instant,
+              _: Option[Task.OrderingId],
+              _: Option[Task.UniquenessKey],
+              _: Instant,
+              _: Int
+            ))
+            .expects(from, None, None, to, limit)
             .returns(Future.successful(List(task)))
 
           get(s"$namespace/tasks", Seq("from" -> fromString, "to" -> toString, "limit" -> limitString)) {
@@ -169,13 +181,15 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
           val fromOrderingIdString = "orderingId"
           val fromUniquenessKeyString = "uniquenessKey"
 
-          (mockAdminService.fetchIncompleteTasks(
-            _: Instant,
-            _: Option[Task.OrderingId],
-            _: Option[Task.UniquenessKey],
-            _: Instant,
-            _: Int
-          )).expects(
+          (mockAdminService
+            .fetchIncompleteTasks(
+              _: Instant,
+              _: Option[Task.OrderingId],
+              _: Option[Task.UniquenessKey],
+              _: Instant,
+              _: Int
+            ))
+            .expects(
               from,
               Some(fromOrderingIdString),
               Some(fromUniquenessKeyString),
@@ -199,13 +213,15 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
         }
 
         "and the fetch fails" in {
-          (mockAdminService.fetchIncompleteTasks(
-            _: Instant,
-            _: Option[Task.OrderingId],
-            _: Option[Task.UniquenessKey],
-            _: Instant,
-            _: Int
-          )).expects(from, None, None, to, limit)
+          (mockAdminService
+            .fetchIncompleteTasks(
+              _: Instant,
+              _: Option[Task.OrderingId],
+              _: Option[Task.UniquenessKey],
+              _: Instant,
+              _: Int
+            ))
+            .expects(from, None, None, to, limit)
             .returns(Future.failed(new Exception("test")))
 
           get(s"$namespace/tasks", Seq("from" -> fromString, "to" -> toString, "limit" -> limitString)) {
@@ -263,15 +279,19 @@ class AdminServletSpec extends ScalatraSuite with FreeSpecLike with MockFactory 
           val body = "{\"task\":{\"status\":\"Dropped\"}}"
 
           "and the drop succeeds" in {
-            (mockAdminService.dropTask(_: TaskKey))
-              .expects(key).returns(Future.successful(()))
+            (mockAdminService
+              .dropTask(_: TaskKey))
+              .expects(key)
+              .returns(Future.successful(()))
             put(s"$namespace/task?key=$key", body) {
               status should equal(204)
             }
           }
 
           "and the drop fails" in {
-            (mockAdminService.dropTask(_: TaskKey)).expects(key)
+            (mockAdminService
+              .dropTask(_: TaskKey))
+              .expects(key)
               .returns(Future.failed(new Exception("test")))
             put(s"$namespace/task?key=$key", body) {
               status should equal(500)

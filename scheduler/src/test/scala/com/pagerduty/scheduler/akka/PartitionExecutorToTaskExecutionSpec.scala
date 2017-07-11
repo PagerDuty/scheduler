@@ -1,16 +1,17 @@
 package com.pagerduty.scheduler.akka
 
-import akka.testkit.{ TestActorRef, TestProbe }
+import akka.testkit.{TestActorRef, TestProbe}
 import com.pagerduty.scheduler.akka.PartitionExecutor.ExecutePartitionTask
 import com.pagerduty.scheduler.akka.TaskExecutor._
 import com.pagerduty.scheduler.akka.TaskStatusTracker._
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 import com.pagerduty.scheduler._
-import com.pagerduty.scheduler.model.{ Task, TaskStatus }
+import com.pagerduty.scheduler.model.{Task, TaskStatus}
 import org.scalamock.scalatest.PathMockFactory
 
 class PartitionExecutorToTaskExecutionSpec
-    extends ActorPathFreeSpec("PartitionExecutorToTaskExecutionSpec") with PathMockFactory {
+    extends ActorPathFreeSpec("PartitionExecutorToTaskExecutionSpec")
+    with PathMockFactory {
   val settings = Settings()
 
   "PartitionExecutorToTaskExecutionSpec" - {

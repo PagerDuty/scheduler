@@ -10,7 +10,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-
 // IMPORTANT:
 //
 // - See the README for manual Setup Steps before running this test!
@@ -20,10 +19,7 @@ import scala.util.control.NonFatal
 //   here, fix up the config file as needed.
 //
 
-class SchedulerIntegrationRebalanceSpec
-  extends SchedulerIntegrationSpecBase
-    with BeforeAndAfter
-{
+class SchedulerIntegrationRebalanceSpec extends SchedulerIntegrationSpecBase with BeforeAndAfter {
 
   var scheduler1: TestScheduler = null
   var scheduler2: TestScheduler = null
@@ -122,8 +118,7 @@ class SchedulerIntegrationRebalanceSpec
       // capture which tasks ran on scheduler2
       val scheduler2tasks = scheduler2.executedTasks
       // and then ensure it's test history is cleared
-      scheduler2.tasksShouldConditionBy(tzero, true) {
-      }
+      scheduler2.tasksShouldConditionBy(tzero, true) {}
 
       // wait for scheduler2 tasks to update Cassandra to avoid race with shutdown
       eventually {
@@ -155,8 +150,7 @@ class SchedulerIntegrationRebalanceSpec
           sortedTasks(scheduler1.executedTasks) -> sortedTasks(scheduler2.executedTasks)
         )
       }
-      scheduler2.tasksShouldConditionBy(tplusBar, true) {
-      }
+      scheduler2.tasksShouldConditionBy(tplusBar, true) {}
 
     }
   }

@@ -1,6 +1,6 @@
 package com.pagerduty.scheduler.akka
 
-import akka.actor.{ Actor, ActorRef }
+import akka.actor.{Actor, ActorRef}
 import akka.actor.Props
 
 import com.pagerduty.scheduler.Scheduler
@@ -20,23 +20,16 @@ object Retrier {
     sealed trait Data
     case class RetryData(numberOfAttempts: Int) extends Data
 
-    def props(
-      message: Any,
-      from: ActorRef,
-      to: ActorRef,
-      maxAttempts: Int,
-      logging: Scheduler.Logging
-    ): Props =
+    def props(message: Any, from: ActorRef, to: ActorRef, maxAttempts: Int, logging: Scheduler.Logging): Props =
       Props(new RequestRetrier(message, from, to, maxAttempts, logging))
   }
 
   private class RequestRetrier(
-    message: Any,
-    from: ActorRef,
-    to: ActorRef,
-    maxAttempts: Int,
-    logging: Scheduler.Logging
-  )
+      message: Any,
+      from: ActorRef,
+      to: ActorRef,
+      maxAttempts: Int,
+      logging: Scheduler.Logging)
       extends ExtendedLoggingFSM[RequestRetrier.State, RequestRetrier.Data] {
 
     import RequestRetrier._
@@ -78,4 +71,3 @@ class Retrier(requestHandler: ActorRef, maxAttempts: Int, logging: Scheduler.Log
       requestHandler.forward(message)
   }
 }
-

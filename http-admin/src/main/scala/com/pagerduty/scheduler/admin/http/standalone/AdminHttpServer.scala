@@ -8,18 +8,15 @@ import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
 
 /**
- * A wrapper for a standalone embedded Jetty HTTP server.
- *
- * Meant to be enabled by services (via config) that are not already serving HTTP via Scalatra,
- * or services that would prefer to delegate this setup to the Scheduler library.
- *
- * @param settings
- * @param adminService
- */
-class AdminHttpServer(
-    settings: Settings,
-    adminService: AdminService
-) {
+  * A wrapper for a standalone embedded Jetty HTTP server.
+  *
+  * Meant to be enabled by services (via config) that are not already serving HTTP via Scalatra,
+  * or services that would prefer to delegate this setup to the Scheduler library.
+  *
+  * @param settings
+  * @param adminService
+  */
+class AdminHttpServer(settings: Settings, adminService: AdminService) {
 
   import AdminHttpServer._
 

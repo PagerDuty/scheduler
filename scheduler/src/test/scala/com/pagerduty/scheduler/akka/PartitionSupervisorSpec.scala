@@ -1,13 +1,12 @@
 package com.pagerduty.scheduler.akka
 
-import akka.actor.{ ActorRefFactory, Props }
+import akka.actor.{ActorRefFactory, Props}
 import akka.testkit.TestProbe
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 import com.pagerduty.scheduler.Scheduler
 import org.scalamock.scalatest.PathMockFactory
 
-class PartitionSupervisorSpec extends ActorPathFreeSpec("PartitionSupervisorSpec")
-    with PathMockFactory {
+class PartitionSupervisorSpec extends ActorPathFreeSpec("PartitionSupervisorSpec") with PathMockFactory {
   val settings = Settings()
   val partitionId = 1
   val tasks = TaskFactory.makeTasks(3)
@@ -24,9 +23,14 @@ class PartitionSupervisorSpec extends ActorPathFreeSpec("PartitionSupervisorSpec
       args.partitionId shouldEqual partitionId
       taskPersistence.testActor
     }
-    val partitionSupervisorProps = Props(new PartitionSupervisor(
-      settings, queueContext, partitionId, taskPersistenceFactory
-    ))
+    val partitionSupervisorProps = Props(
+      new PartitionSupervisor(
+        settings,
+        queueContext,
+        partitionId,
+        taskPersistenceFactory
+      )
+    )
     val paritionsSupervisor = system.actorOf(partitionSupervisorProps)
     taskPersistence.expectMsgType[TaskPersistence.LoadTasks]
 

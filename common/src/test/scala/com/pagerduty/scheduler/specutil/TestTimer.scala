@@ -4,8 +4,8 @@ import com.pagerduty.metrics.Stopwatch
 import org.scalatest._
 
 /**
- * Provides timing functions so we can identify slow tests.
- */
+  * Provides timing functions so we can identify slow tests.
+  */
 trait TestTimer extends BeforeAndAfterAll with BeforeAndAfterEachTestData { this: Suite =>
 
   final val AnsiReset = "\u001B[0m"
@@ -24,8 +24,10 @@ trait TestTimer extends BeforeAndAfterAll with BeforeAndAfterEachTestData { this
 
   override def afterAll() {
     super.afterAll()
-    println(AnsiBlue + "Total time for " + this.getClass.getName + " (" +
-      overAllStopwatch.elapsed().toSeconds + " seconds)" + AnsiReset)
+    println(
+      AnsiBlue + "Total time for " + this.getClass.getName + " (" +
+        overAllStopwatch.elapsed().toSeconds + " seconds)" + AnsiReset
+    )
   }
 
   override def beforeEach(td: TestData) {
@@ -39,11 +41,15 @@ trait TestTimer extends BeforeAndAfterAll with BeforeAndAfterEachTestData { this
     val elapsedMillis = elapsed.toMillis
     val elapsedSeconds = elapsedMillis / 1000.0
     if (elapsedMillis > 10000) {
-      println(AnsiRed + "[SUPER SLOW] " + td.name + ". Time taken: " +
-        elapsedSeconds + " seconds" + AnsiReset)
+      println(
+        AnsiRed + "[SUPER SLOW] " + td.name + ". Time taken: " +
+          elapsedSeconds + " seconds" + AnsiReset
+      )
     } else if (elapsedMillis > 1000) {
-      println(AnsiYellow + "[SLOW] " + td.name + ". Time taken: " +
-        elapsedSeconds + " seconds" + AnsiReset)
+      println(
+        AnsiYellow + "[SLOW] " + td.name + ". Time taken: " +
+          elapsedSeconds + " seconds" + AnsiReset
+      )
     }
   }
 

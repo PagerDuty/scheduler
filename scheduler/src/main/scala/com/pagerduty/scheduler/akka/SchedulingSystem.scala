@@ -4,18 +4,18 @@ import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.pattern.AskTimeoutException
 import akka.util.Timeout
-import com.netflix.astyanax.{ Cluster, Keyspace }
+import com.netflix.astyanax.{Cluster, Keyspace}
 import com.pagerduty.eris.dao.ErisSettings
 import com.pagerduty.metrics.Metrics
-import com.pagerduty.scheduler.dao.{ TaskScheduleDaoImpl, TaskStatusDaoImpl }
+import com.pagerduty.scheduler.dao.{TaskScheduleDaoImpl, TaskStatusDaoImpl}
 import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
-import com.pagerduty.scheduler.{ Scheduler, TaskExecutorService, _ }
+import com.pagerduty.scheduler.{Scheduler, TaskExecutorService, _}
 import com.typesafe.config.Config
 import java.time.Instant
 import scala.annotation.tailrec
-import scala.concurrent.{ Await, TimeoutException }
+import scala.concurrent.{Await, TimeoutException}
 import scala.concurrent.duration._
 
 object SchedulingSystem {
@@ -23,10 +23,10 @@ object SchedulingSystem {
 }
 
 /**
- * SchedulingSystem manages lifecycle of the underlying Akka system and allows to interact with
- * actors using a simple method-based interface.
- * @param partitions the ids of the partitions
- */
+  * SchedulingSystem manages lifecycle of the underlying Akka system and allows to interact with
+  * actors using a simple method-based interface.
+  * @param partitions the ids of the partitions
+  */
 class SchedulingSystem(
     config: Config,
     cluster: Cluster,
@@ -34,8 +34,7 @@ class SchedulingSystem(
     partitions: Set[PartitionId],
     taskExecutorServiceFactory: Set[PartitionId] => TaskExecutorService,
     logging: Scheduler.Logging,
-    metrics: Metrics
-) {
+    metrics: Metrics) {
   import SchedulingSystem._
 
   private val settings = Settings(config)
@@ -44,10 +43,10 @@ class SchedulingSystem(
   private lazy val taskScheduleDao = new TaskScheduleDaoImpl(cluster, keyspace, erisSettings)
 
   /**
-   * Calculates the number of stale tasks across all partitions, assigned and unasssigned
-   *
-   * @return the number of stale tasks in ScheduledColumnFamily
-   */
+    * Calculates the number of stale tasks across all partitions, assigned and unasssigned
+    *
+    * @return the number of stale tasks in ScheduledColumnFamily
+    */
   def calculateStaleTasks(allPartitionIds: Set[PartitionId], limit: Int): Int = {
     val from = Instant.now() - settings.lookBackOnRestart
     val to = Instant.now() - settings.timeUntilStaleTask
@@ -82,12 +81,12 @@ class SchedulingSystem(
   }
 
   /**
-   * Forwards tasks for scheduling and execution, blocking until all the tasks have been
-   * durably stored in Cassandra. This method throws an exception if there was a problem
-   * persisting some tasks.
-   *
-   * @param taskBatch a batch of tasks
-   */
+    * Forwards tasks for scheduling and execution, blocking until all the tasks have been
+    * durably stored in Cassandra. This method throws an exception if there was a problem
+    * persisting some tasks.
+    *
+    * @param taskBatch a batch of tasks
+    */
   def persistAndSchedule(taskBatch: Map[PartitionId, Seq[Task]]): Unit = {
     implicit val timeout = Timeout(askPersistRequestTimeout)
     val future = queueSupervisor ? TopicSupervisor.ProcessTaskBatch(taskBatch)
@@ -127,8 +126,8 @@ class SchedulingSystem(
   private[scheduler] def getActorSystem(): ActorSystem = system
 
   /**
-   * Shuts down the actor system. Will block, waiting for underlying systems to shutdown.
-   */
+    * Shuts down the actor system. Will block, waiting for underlying systems to shutdown.
+    */
   def shutdownAndWait(): Unit = {
     logging.trackResourceShutdown("SchedulingSystem") {
       system.shutdown()

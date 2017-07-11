@@ -10,15 +10,11 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
- * IMPORTANT:
- *
- * - See the README for manual Setup Steps before running this test.
- */
-class DropTaskSpec
-  extends SchedulerIntegrationSpecBase
-    with BeforeAndAfter
-    with Eventually
-{
+  * IMPORTANT:
+  *
+  * - See the README for manual Setup Steps before running this test.
+  */
+class DropTaskSpec extends SchedulerIntegrationSpecBase with BeforeAndAfter with Eventually {
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(40, Seconds)))
 
   var scheduler: TestScheduler = null
@@ -30,7 +26,6 @@ class DropTaskSpec
   after {
     scheduler.shutdown()
   }
-
 
   "Scheduler should" - {
     "be able to drop stuck tasks" in {
@@ -51,7 +46,7 @@ class DropTaskSpec
         adminTask.numberOfAttempts.getOrElse(0) should equal(1)
       }
       // Make sure we haven't taken too long!
-      scheduler.executedTasks should not contain(goodTask)
+      scheduler.executedTasks should not contain (goodTask)
       // Drop the task
       Await.result(adminService.dropTask(stuckTask.taskKey), Duration.Inf)
       // Once stuckTask is dropped, goodTask should be able to run

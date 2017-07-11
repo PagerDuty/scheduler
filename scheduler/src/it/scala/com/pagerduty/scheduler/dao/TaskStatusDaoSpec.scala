@@ -15,8 +15,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Seconds, Span}
 import scala.concurrent.duration._
 
-class TaskStatusDaoSpec
-    extends fixture.WordSpec with MustMatchers with DaoFixture with TestTimer with ScalaFutures {
+class TaskStatusDaoSpec extends fixture.WordSpec with MustMatchers with DaoFixture with TestTimer with ScalaFutures {
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(3, Seconds)))
 
   type FixtureParam = TaskStatusDaoImpl
@@ -141,9 +140,7 @@ class TaskStatusDaoSpec
     def loadPlusMinusOneSecondWithStatusFrom(task: Task): Seq[(TaskKey, TaskStatus)] = {
       loadPlusMinusOneSecondWithStatusFrom(partitionId, task)
     }
-    def loadPlusMinusOneSecondWithStatusFrom(
-      partitionId: PartitionId, task: Task
-    ): Seq[(TaskKey, TaskStatus)] = {
+    def loadPlusMinusOneSecondWithStatusFrom(partitionId: PartitionId, task: Task): Seq[(TaskKey, TaskStatus)] = {
       val from = task.scheduledTime - 1.second
       val to = task.scheduledTime + 1.second
       dao.load(partitionId, from, to, limit).futureValue

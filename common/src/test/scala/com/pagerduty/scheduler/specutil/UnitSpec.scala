@@ -1,9 +1,9 @@
 package com.pagerduty.scheduler.specutil
 
 import org.scalatest.WordSpecLike
-import org.scalatest.{ FreeSpecLike, Matchers }
+import org.scalatest.{FreeSpecLike, Matchers}
 import org.scalatest.concurrent.Eventually
-import org.scalatest.time.{ Seconds, Span }
+import org.scalatest.time.{Seconds, Span}
 
 // TODO deprecate this eventually
 trait UnitSpec extends WordSpecLike with Matchers with TestTimer with Eventually {

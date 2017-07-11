@@ -17,10 +17,9 @@ object CassandraTaskExecutorTestService {
   val WorkersPerPartition = 2
 
   class LogEntryDao(
-    protected val cluster: Cluster,
-    protected val keyspace: Keyspace,
-    override protected val settings: ErisSettings
-  )
+      protected val cluster: Cluster,
+      protected val keyspace: Keyspace,
+      override protected val settings: ErisSettings)
       extends Dao {
 
     protected implicit val executor: ExecutionContextExecutor = ExecutionContext.Implicits.global
@@ -48,9 +47,9 @@ object CassandraTaskExecutorTestService {
   }
 
   def cassTestExecutorFactory(
-    mkClusterCtx: () => ClusterCtx,
-    taskRunner: Task => Unit
-  ): Set[PartitionId] => TaskExecutorService = {
+      mkClusterCtx: () => ClusterCtx,
+      taskRunner: Task => Unit
+    ): Set[PartitionId] => TaskExecutorService = {
     val managedTaskRunner = new ManagedCassandraTaskRunner[LogEntryDao] {
       def makeClusterCtx(): ClusterCtx = mkClusterCtx()
       def makeManagedResource(clusterCtx: ClusterCtx): LogEntryDao = {

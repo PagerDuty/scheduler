@@ -1,22 +1,21 @@
 package com.pagerduty.scheduler.akka
 
 import akka.actor._
-import akka.testkit.{ TestActorRef, TestKit, TestProbe }
+import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import com.pagerduty.eris.TimeUuid
 import com.pagerduty.scheduler.akka.OrderingExecutor.ExecuteOrderingTask
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 import com.pagerduty.scheduler.Scheduler
 import com.pagerduty.scheduler.model.Task
 import org.scalamock.scalatest.PathMockFactory
 
-class PartitionExecutorSpec extends ActorPathFreeSpec("PartitionExecutorSpec")
-    with PathMockFactory {
+class PartitionExecutorSpec extends ActorPathFreeSpec("PartitionExecutorSpec") with PathMockFactory {
   import PartitionExecutor._
 
   "PartitionExecutor" - {
     val orderingExecutor = TestProbe()
-    val orderingExecutorFactory = {
-      (_: ActorRefFactory, _: PartitionContext, _: Task.OrderingId, _: ActorRef) => orderingExecutor.ref
+    val orderingExecutorFactory = { (_: ActorRefFactory, _: PartitionContext, _: Task.OrderingId, _: ActorRef) =>
+      orderingExecutor.ref
     }
     val partitionExecutorProps = Props(new PartitionExecutor(orderingExecutorFactory))
     val partitionExecutor = TestActorRef[PartitionExecutor](partitionExecutorProps)

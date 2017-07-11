@@ -1,9 +1,9 @@
 package com.pagerduty.scheduler.specutil
 
 import akka.actor.ActorSystem
-import akka.testkit.{ ImplicitSender, TestKit }
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{ Matchers, path }
+import org.scalatest.{Matchers, path}
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 abstract class ActorPathFreeSpec(actorSystemName: String)

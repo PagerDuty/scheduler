@@ -5,10 +5,10 @@ import akka.pattern.AskTimeoutException
 import akka.testkit.TestProbe
 import com.netflix.astyanax.Cluster
 import com.pagerduty.metrics.NullMetrics
-import com.pagerduty.scheduler.akka.TopicSupervisor.{ ProcessTaskBatch, TaskBatchNotProcessed, TaskBatchProcessed }
+import com.pagerduty.scheduler.akka.TopicSupervisor.{ProcessTaskBatch, TaskBatchNotProcessed, TaskBatchProcessed}
 import com.pagerduty.scheduler.model.Task
 import com.pagerduty.scheduler.model.Task.PartitionId
-import com.pagerduty.scheduler.{ Scheduler, TestExecutorService }
+import com.pagerduty.scheduler.{Scheduler, TestExecutorService}
 import com.pagerduty.scheduler.specutil.ActorPathFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.PathMockFactory
@@ -16,10 +16,7 @@ import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.Future
 
-class SchedulingSystemSpec
-    extends ActorPathFreeSpec("SchedulingSystemSpec")
-    with PathMockFactory
-    with ScalaFutures {
+class SchedulingSystemSpec extends ActorPathFreeSpec("SchedulingSystemSpec") with PathMockFactory with ScalaFutures {
 
   val mockSystem = stub[ActorSystem]
   val queueSupervisor = TestProbe()
@@ -32,8 +29,8 @@ class SchedulingSystemSpec
   val executorFactory = (_: Set[PartitionId]) => new TestExecutorService(threadPoolSize = 2, taskRunner)
   val logging = stub[Scheduler.Logging]
 
-  class TestSchedulingSystem extends SchedulingSystem(config, cluster, keyspace, partitions,
-    executorFactory, logging, NullMetrics) {
+  class TestSchedulingSystem
+      extends SchedulingSystem(config, cluster, keyspace, partitions, executorFactory, logging, NullMetrics) {
     override protected val system = mockSystem
     override protected lazy val queueSupervisor = mockTopicSupervisor
   }

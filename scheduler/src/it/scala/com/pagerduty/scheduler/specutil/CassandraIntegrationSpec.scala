@@ -31,14 +31,12 @@ trait CassandraIntegrationSpec extends FreeSpecLike with BeforeAndAfterAll {
     val schemaLoader = getSchemaLoader()
     try {
       schemaLoader.dropSchema()
-    }
-    catch {
+    } catch {
       case NonFatal(e) => println(s"Error dropping schema: $e")
     }
     try {
       schemaLoader.loadSchema()
-    }
-    catch {
+    } catch {
       case NonFatal(e) => println(s"Error loading schema: $e")
     }
   }

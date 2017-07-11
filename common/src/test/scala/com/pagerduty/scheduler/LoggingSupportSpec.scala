@@ -1,12 +1,12 @@
 package com.pagerduty.scheduler
 
-import com.pagerduty.metrics.{ Event, Metrics, NullMetrics }
+import com.pagerduty.metrics.{Event, Metrics, NullMetrics}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.Eventually
-import org.scalatest.{ Matchers, WordSpecLike }
+import org.scalatest.{Matchers, WordSpecLike}
 import org.slf4j.Logger
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Promise }
+import scala.concurrent.{Await, Promise}
 import scala.util.Try
 
 class LoggingSupportSpec extends WordSpecLike with Matchers with Eventually with MockFactory {
@@ -40,12 +40,16 @@ class LoggingSupportSpec extends WordSpecLike with Matchers with Eventually with
       val logString = "Faux log"
 
       inSequence {
-        (mockLogger.info(_: String)).expects(where { logStr: String =>
-          logStr.contains("Attempting") && logStr.contains(logString)
-        })
-        (mockLogger.info(_: String)).expects(where { logStr: String =>
-          logStr.contains("Succeeded") && logStr.contains(logString)
-        })
+        (mockLogger
+          .info(_: String))
+          .expects(where { logStr: String =>
+            logStr.contains("Attempting") && logStr.contains(logString)
+          })
+        (mockLogger
+          .info(_: String))
+          .expects(where { logStr: String =>
+            logStr.contains("Succeeded") && logStr.contains(logString)
+          })
       }
       LoggingSupport.reportFutureResults(stats, mockLogger, name, Some(logString), future, additionalTags)
 
@@ -64,12 +68,16 @@ class LoggingSupportSpec extends WordSpecLike with Matchers with Eventually with
       val logString = "Fail log"
 
       inSequence {
-        (mockLogger.info(_: String)).expects(where { logStr: String =>
-          logStr.contains("Attempting") && logStr.contains(logString)
-        })
-        (mockLogger.error(_: String, _: Throwable)).expects(where { (logStr: String, _) =>
-          logStr.contains("Failed") && logStr.contains(logString)
-        })
+        (mockLogger
+          .info(_: String))
+          .expects(where { logStr: String =>
+            logStr.contains("Attempting") && logStr.contains(logString)
+          })
+        (mockLogger
+          .error(_: String, _: Throwable))
+          .expects(where { (logStr: String, _) =>
+            logStr.contains("Failed") && logStr.contains(logString)
+          })
       }
 
       LoggingSupport.reportFutureResults(stats, mockLogger, name, Some(logString), future, additionalTags)

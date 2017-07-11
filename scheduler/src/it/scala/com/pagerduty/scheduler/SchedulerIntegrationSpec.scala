@@ -9,7 +9,6 @@ import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FreeSpec, Matchers}
 import org.scalatest.time.{Seconds, Span}
 import scala.concurrent.duration._
 
-
 // IMPORTANT:
 //
 // - See the README for manual Setup Steps before running this test!
@@ -19,10 +18,7 @@ import scala.concurrent.duration._
 //   here, fix up the config file as needed.
 //
 
-class SchedulerIntegrationSpec
-  extends SchedulerIntegrationSpecBase
-    with BeforeAndAfter
-{
+class SchedulerIntegrationSpec extends SchedulerIntegrationSpecBase with BeforeAndAfter {
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(20, Seconds)))
 
   var scheduler: TestScheduler = _

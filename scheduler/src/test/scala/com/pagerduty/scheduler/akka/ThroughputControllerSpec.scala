@@ -10,8 +10,10 @@ import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.ShouldMatchers
 import scala.concurrent.duration._
 
-class ThroughputControllerSpec extends ActorPathFreeSpec("ThroughputControllerSpec")
-    with PathMockFactory with ShouldMatchers {
+class ThroughputControllerSpec
+    extends ActorPathFreeSpec("ThroughputControllerSpec")
+    with PathMockFactory
+    with ShouldMatchers {
   import ThroughputController._
 
   val partitionId = 1
@@ -30,7 +32,9 @@ class ThroughputControllerSpec extends ActorPathFreeSpec("ThroughputControllerSp
 
   "ThroughputController should" - {
     val throughputControllerProps = ThroughputController.props(
-      partitionId, settings, stub[Scheduler.Logging]
+      partitionId,
+      settings,
+      stub[Scheduler.Logging]
     )
     val taskPersistence = TestProbe()
     val scheduler = TestProbe()
@@ -105,7 +109,8 @@ class ThroughputControllerSpec extends ActorPathFreeSpec("ThroughputControllerSp
       }
       reportInProgressTaskCounts(schedulerCount = 1, partitionExecutorCount = 1)
       taskPersistence.expectMsgPF(maxMessageDelay) {
-        case TaskPersistence.LoadTasks(upperBound, ExpectedBatchSize) if equalWithinMessageDelay(upperBound, expectedUpperBound) => // Match only.
+        case TaskPersistence.LoadTasks(upperBound, ExpectedBatchSize)
+            if equalWithinMessageDelay(upperBound, expectedUpperBound) => // Match only.
       }
     }
   }

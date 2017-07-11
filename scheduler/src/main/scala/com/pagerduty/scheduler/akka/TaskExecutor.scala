@@ -1,33 +1,33 @@
 package com.pagerduty.scheduler.akka
 
-import akka.actor.{ ActorRef, Props }
+import akka.actor.{ActorRef, Props}
 import com.pagerduty.scheduler.akka.TaskStatusTracker._
 import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model._
 import java.time.Instant
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /**
- * The TaskExecutor is a short-lived actor that handles task execution by delegating tasks to a
- * TaskExecutorService.
- *
- * It is initialized with a task to execute, and a reference to the requesting actor. Then, it:
- *  - Checks with the TaskStatusTracker if the task is already completed
- *  - If the task is already completed, it deletes the task from TaskPersistence and reports
- *    success
- *  - If the task is not yet completed, it is submitted to the TaskExecutorService
- *  - If the task succeeds, the TaskExecutor marks it as complete using the TaskStatusTracker
- *  - If marking as complete succeeds, it deletes the Task from TaskPersistence and reports success
- *    to the requester
- *  - If the task fails, it is retried until the max number of retries is reached then is marked as
- *    failed by the TaskStatusTracker
- *  - If the marking as failed succeeds, it deletes the Task from TaskPersistence and reports
- *    success to the requester
- *  - If marking as complete or as failed fails, it crashes
- *
- *  Task attempt count is persisted after every attempt.
- */
+  * The TaskExecutor is a short-lived actor that handles task execution by delegating tasks to a
+  * TaskExecutorService.
+  *
+  * It is initialized with a task to execute, and a reference to the requesting actor. Then, it:
+  *  - Checks with the TaskStatusTracker if the task is already completed
+  *  - If the task is already completed, it deletes the task from TaskPersistence and reports
+  *    success
+  *  - If the task is not yet completed, it is submitted to the TaskExecutorService
+  *  - If the task succeeds, the TaskExecutor marks it as complete using the TaskStatusTracker
+  *  - If marking as complete succeeds, it deletes the Task from TaskPersistence and reports success
+  *    to the requester
+  *  - If the task fails, it is retried until the max number of retries is reached then is marked as
+  *    failed by the TaskStatusTracker
+  *  - If the marking as failed succeeds, it deletes the Task from TaskPersistence and reports
+  *    success to the requester
+  *  - If marking as complete or as failed fails, it crashes
+  *
+  *  Task attempt count is persisted after every attempt.
+  */
 object TaskExecutor {
   private case object ExecutionThreadSuccess
   private case class ExecutionThreadFailed(throwable: Throwable)
@@ -43,27 +43,24 @@ object TaskExecutor {
   sealed trait Data
   case object NoData extends Data
   case class ExecutingData(attemptNumber: Int, startedAt: Instant) extends Data
-  case class AttemptData(
-    startedAt: Instant, finishedAt: Instant, exception: Option[Throwable]
-  ) extends Data
+  case class AttemptData(startedAt: Instant, finishedAt: Instant, exception: Option[Throwable]) extends Data
 
-  def props(
-    settings: Settings,
-    partitionContext: PartitionContext,
-    task: Task,
-    requester: ActorRef
-  ): Props = {
-    Props(new TaskExecutor(
-      settings,
-      partitionContext,
-      task,
-      requester
-    ))
+  def props(settings: Settings, partitionContext: PartitionContext, task: Task, requester: ActorRef): Props = {
+    Props(
+      new TaskExecutor(
+        settings,
+        partitionContext,
+        task,
+        requester
+      )
+    )
   }
 
   private[akka] def jitteredWaitForRetry(
-    nextAttemptNumber: Int, settings: Settings, randomDouble: () => Double
-  ): FiniteDuration = {
+      nextAttemptNumber: Int,
+      settings: Settings,
+      randomDouble: () => Double
+    ): FiniteDuration = {
     val backoffFactorMs = settings.exponentialBackoffFactor.toMillis
     val maxBackoffTimeMs = settings.maxTaskBackoffPeriod.toMillis.toDouble
     val tempWaitDurationMs = maxBackoffTimeMs.min(backoffFactorMs * math.pow(2, nextAttemptNumber - 2))
@@ -71,12 +68,7 @@ object TaskExecutor {
   }
 }
 
-class TaskExecutor(
-  settings: Settings,
-  partitionContext: PartitionContext,
-  task: Task,
-  requester: ActorRef
-)
+class TaskExecutor(settings: Settings, partitionContext: PartitionContext, task: Task, requester: ActorRef)
     extends ExtendedLoggingFSM[TaskExecutor.State, TaskExecutor.Data] {
   import TaskExecutor._
   import context.dispatcher
@@ -197,7 +189,11 @@ class TaskExecutor(
 
   private def executeTask(attemptNumber: Int, attemptAt: Instant): State = {
     val startedAt = Instant.now()
-    logging.reportTaskExecutionDelay(partitionId, task, java.time.Duration.between(attemptAt, startedAt).toScalaDuration)
+    logging.reportTaskExecutionDelay(
+      partitionId,
+      task,
+      java.time.Duration.between(attemptAt, startedAt).toScalaDuration
+    )
 
     val taskExecutionFuture = taskExecutorService.execute(partitionId, task)
     taskExecutionFuture onComplete {
@@ -209,11 +205,7 @@ class TaskExecutor(
     goto(ExecutingTask) using ExecutingData(attemptNumber, startedAt)
   }
 
-  private def handleTaskStatusNotUpdated(
-    taskKey: TaskKey,
-    taskStatus: TaskStatus,
-    t: Throwable
-  ): State = {
+  private def handleTaskStatusNotUpdated(taskKey: TaskKey, taskStatus: TaskStatus, t: Throwable): State = {
     logging.reportTaskStatusNotUpdated(taskKey, taskStatus, t)
     throw t
   }

@@ -1,17 +1,15 @@
 package com.pagerduty.scheduler.akka
 
-import akka.testkit.{ TestFSMRef, TestProbe }
+import akka.testkit.{TestFSMRef, TestProbe}
 import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.model._
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 import org.scalamock.scalatest.PathMockFactory
 import java.time.Instant
 import scala.concurrent.duration._
 import scala.concurrent.Future
 
-class TaskExecutorSpec
-    extends ActorPathFreeSpec("TaskExecutorSpec")
-    with PathMockFactory {
+class TaskExecutorSpec extends ActorPathFreeSpec("TaskExecutorSpec") with PathMockFactory {
   import TaskPersistence._
   import TaskStatusTracker._
   import TaskExecutor._
@@ -67,25 +65,30 @@ class TaskExecutorSpec
 
     "when constructed with a task that will fail once" - {
       var failCount = 0
-      (partitionContext.taskExecutorService.execute(_: Int, _: Task)).when(*, task).onCall(
-        { (_, task: Task) =>
-          if (failCount == 0) {
-            failCount += 1
-            Future.failed(new Exception("task failed"))
-          } else {
-            Future.successful()
+      (partitionContext.taskExecutorService
+        .execute(_: Int, _: Task))
+        .when(*, task)
+        .onCall(
+          { (_, task: Task) =>
+            if (failCount == 0) {
+              failCount += 1
+              Future.failed(new Exception("task failed"))
+            } else {
+              Future.successful()
+            }
           }
-        }
-      )
+        )
 
       val maxBackoffPeriod = 100.milliseconds
       val settings = Settings().copy(maxTaskBackoffPeriod = maxBackoffPeriod)
-      val taskExecutor = TestFSMRef(new TaskExecutor(
-        settings,
-        partitionContext,
-        task,
-        orderingExecutor.testActor
-      ))
+      val taskExecutor = TestFSMRef(
+        new TaskExecutor(
+          settings,
+          partitionContext,
+          task,
+          orderingExecutor.testActor
+        )
+      )
 
       "when it executes the task" - {
         taskStatusTracker.expectMsg(FetchTaskStatus(task.taskKey))
@@ -103,27 +106,30 @@ class TaskExecutorSpec
           val successAfter2Attempts = TaskStatus.successful(2)
           taskStatusTracker.expectMsg(UpdateTaskStatus(task.taskKey, successAfter2Attempts))
 
-          (logging.reportTaskAttemptFinished _).verify(where {
-            (_, task: Task, taskAttempt: TaskAttempt) =>
-              task.taskKey == taskKey &&
-                taskAttempt.attemptNumber == 1 &&
-                taskAttempt.taskResult == CompletionResult.Incomplete &&
-                taskAttempt.exceptionClass.isDefined
+          (logging.reportTaskAttemptFinished _).verify(where { (_, task: Task, taskAttempt: TaskAttempt) =>
+            task.taskKey == taskKey &&
+            taskAttempt.attemptNumber == 1 &&
+            taskAttempt.taskResult == CompletionResult.Incomplete &&
+            taskAttempt.exceptionClass.isDefined
           })
         }
       }
     }
 
     "when constructed with a task that will succeed" - {
-      (partitionContext.taskExecutorService.execute(_: Int, _: Task)).when(*, task)
+      (partitionContext.taskExecutorService
+        .execute(_: Int, _: Task))
+        .when(*, task)
         .returns(Future.successful())
 
-      val taskExecutor = TestFSMRef(new TaskExecutor(
-        Settings(),
-        partitionContext,
-        task,
-        orderingExecutor.testActor
-      ))
+      val taskExecutor = TestFSMRef(
+        new TaskExecutor(
+          Settings(),
+          partitionContext,
+          task,
+          orderingExecutor.testActor
+        )
+      )
 
       "it checks if the task is already completed" in {
         taskStatusTracker.expectMsg(FetchTaskStatus(task.taskKey))
@@ -187,12 +193,11 @@ class TaskExecutorSpec
             }
 
             "it reports task attempt" in {
-              (logging.reportTaskAttemptFinished _).verify(where {
-                (_, task: Task, taskAttempt: TaskAttempt) =>
-                  task.taskKey == taskKey &&
-                    taskAttempt.attemptNumber == 1 &&
-                    taskAttempt.taskResult == CompletionResult.Success &&
-                    taskAttempt.exceptionClass == None
+              (logging.reportTaskAttemptFinished _).verify(where { (_, task: Task, taskAttempt: TaskAttempt) =>
+                task.taskKey == taskKey &&
+                taskAttempt.attemptNumber == 1 &&
+                taskAttempt.taskResult == CompletionResult.Success &&
+                taskAttempt.exceptionClass == None
               })
             }
           }

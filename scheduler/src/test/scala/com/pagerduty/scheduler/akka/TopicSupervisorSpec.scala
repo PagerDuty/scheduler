@@ -6,15 +6,13 @@ import akka.testkit.TestProbe
 import akka.util.Timeout
 import com.pagerduty.scheduler.akka.TaskPersistence.PersistTasks
 import com.pagerduty.scheduler.model.Task.PartitionId
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 import org.scalamock.scalatest.PathMockFactory
 import org.scalatest.concurrent.ScalaFutures
-import scala.concurrent.{ Await, TimeoutException }
+import scala.concurrent.{Await, TimeoutException}
 import scala.concurrent.duration._
 
-class TopicSupervisorSpec extends ActorPathFreeSpec("TopicSupervisorSpec")
-    with PathMockFactory
-    with ScalaFutures {
+class TopicSupervisorSpec extends ActorPathFreeSpec("TopicSupervisorSpec") with PathMockFactory with ScalaFutures {
   import TopicSupervisor._
 
   val partitions = (1 to 3).toSet
@@ -36,15 +34,19 @@ class TopicSupervisorSpec extends ActorPathFreeSpec("TopicSupervisorSpec")
 
   "TopicSupervisor should" - {
     val partitionSupervisors = partitions.map(_ -> TestProbe()).toMap
-    val partitionSupervisorFactory = {
-      (_: ActorRefFactory, partitionId: PartitionId, _: QueueContext) =>
-        {
-          partitionSupervisors(partitionId).testActor
-        }
+    val partitionSupervisorFactory = { (_: ActorRefFactory, partitionId: PartitionId, _: QueueContext) =>
+      {
+        partitionSupervisors(partitionId).testActor
+      }
     }
-    val queueSupervisorProps = Props(new TopicSupervisor(
-      settings, queueContext, partitions, partitionSupervisorFactory
-    ))
+    val queueSupervisorProps = Props(
+      new TopicSupervisor(
+        settings,
+        queueContext,
+        partitions,
+        partitionSupervisorFactory
+      )
+    )
     val queueSupervisor = system.actorOf(queueSupervisorProps)
 
     def replyForSomePartitions(): Unit = {

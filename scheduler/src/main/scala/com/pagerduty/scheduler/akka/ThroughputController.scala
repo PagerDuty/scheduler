@@ -10,21 +10,21 @@ import scala.concurrent.duration._
 object ThroughputController {
 
   /**
-   * Delayed initialization. All the other messages are stashed until this message is received.
-   * @param taskPersistence
-   * @param inProgressTaskOwners
-   */
+    * Delayed initialization. All the other messages are stashed until this message is received.
+    * @param taskPersistence
+    * @param inProgressTaskOwners
+    */
   case class Initialize(taskPersistence: ActorRef, inProgressTaskOwners: Set[ActorRef])
 
   /**
-   * Request sent to actors with in-progress tasks.
-   */
+    * Request sent to actors with in-progress tasks.
+    */
   case object FetchInProgressTaskCount
 
   /**
-   * Reply with the in-progress task count.
-   * @param taskCount
-   */
+    * Reply with the in-progress task count.
+    * @param taskCount
+    */
   case class InProgressTaskCountFetched(taskCount: Int)
 
   sealed trait State
@@ -43,21 +43,18 @@ object ThroughputController {
 }
 
 /**
- * ThroughputController drives loading of the schedule from the database. It will do the
- * book-keeping for when to issue the next `TaskPersistence.LoadTasks`. Before issuing a next
- * load request, it will first query the rest of the system to get a count of in-progress
- * tasks. If there are too many tasks in progress, the ThroughputController will wait for the
- * system to catch up, checking the state periodically.
- *
- * All Actors that may have in-progress tasks for the given TaskPersistence should be passed
- * in inProgressTaskOwners, and should reply to the FetchInProgressTaskCount message.
- */
-class ThroughputController(
-  partitionId: PartitionId,
-  settings: Settings,
-  logging: Scheduler.Logging
-)
-    extends ExtendedLoggingFSM[ThroughputController.State, ThroughputController.Data] with Stash {
+  * ThroughputController drives loading of the schedule from the database. It will do the
+  * book-keeping for when to issue the next `TaskPersistence.LoadTasks`. Before issuing a next
+  * load request, it will first query the rest of the system to get a count of in-progress
+  * tasks. If there are too many tasks in progress, the ThroughputController will wait for the
+  * system to catch up, checking the state periodically.
+  *
+  * All Actors that may have in-progress tasks for the given TaskPersistence should be passed
+  * in inProgressTaskOwners, and should reply to the FetchInProgressTaskCount message.
+  */
+class ThroughputController(partitionId: PartitionId, settings: Settings, logging: Scheduler.Logging)
+    extends ExtendedLoggingFSM[ThroughputController.State, ThroughputController.Data]
+    with Stash {
   import ThroughputController._
 
   val maxInProgressTasks = settings.maxInFlightTasks
@@ -87,8 +84,9 @@ class ThroughputController(
 
   when(AwaitingInProgressCounts) {
     case Event(
-      InProgressTaskCountFetched(taskCount), data: StatusResults
-      ) if data.awaitingReplies.contains(sender) => {
+        InProgressTaskCountFetched(taskCount),
+        data: StatusResults
+        ) if data.awaitingReplies.contains(sender) => {
       val remainingReplies = data.awaitingReplies - sender
       val totalCount = data.inProgressTaskCount + taskCount
 

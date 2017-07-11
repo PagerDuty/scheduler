@@ -1,20 +1,18 @@
 package com.pagerduty.scheduler.akka
 
-import akka.testkit.{ TestFSMRef, TestProbe }
+import akka.testkit.{TestFSMRef, TestProbe}
 import com.pagerduty.metrics.Metrics
 import com.pagerduty.scheduler.Scheduler.LoggingImpl
 import com.pagerduty.scheduler._
-import com.pagerduty.scheduler.model.{ CompletionResult, Task, TaskStatus }
-import com.pagerduty.scheduler.specutil.{ ActorPathFreeSpec, TaskFactory }
+import com.pagerduty.scheduler.model.{CompletionResult, Task, TaskStatus}
+import com.pagerduty.scheduler.specutil.{ActorPathFreeSpec, TaskFactory}
 import com.typesafe.config.ConfigFactory
 import java.time.Instant
 import org.scalamock.scalatest.PathMockFactory
 import scala.concurrent.duration._
 import scala.concurrent.Future
 
-class TaskExecutorTaskRetrySpecSpec
-    extends ActorPathFreeSpec("TaskExecutorSpec")
-    with PathMockFactory {
+class TaskExecutorTaskRetrySpecSpec extends ActorPathFreeSpec("TaskExecutorSpec") with PathMockFactory {
   import TaskPersistence._
   import TaskStatusTracker._
   import TaskExecutor._
@@ -41,12 +39,14 @@ class TaskExecutorTaskRetrySpecSpec
       val maxBackoffPeriod = 100.milliseconds
       val failureStatus = TaskStatus.failed(numberOfAttempts = maxRetries + 1)
       val settings = Settings().copy(maxTaskBackoffPeriod = maxBackoffPeriod, maxTaskRetries = maxRetries)
-      val taskExecutor = TestFSMRef(new TaskExecutor(
-        settings,
-        partitionContext,
-        task,
-        orderingExecutor.ref
-      ))
+      val taskExecutor = TestFSMRef(
+        new TaskExecutor(
+          settings,
+          partitionContext,
+          task,
+          orderingExecutor.ref
+        )
+      )
 
       "when it executes the task" - {
         taskStatusTracker.expectMsg(FetchTaskStatus(task.taskKey))

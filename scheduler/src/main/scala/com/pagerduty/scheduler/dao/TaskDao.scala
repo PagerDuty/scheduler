@@ -4,26 +4,26 @@ import com.pagerduty.eris.dao._
 import com.pagerduty.eris.serializers._
 import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.model.Task.PartitionId
-import com.pagerduty.scheduler.model.{ Task, TaskKey }
+import com.pagerduty.scheduler.model.{Task, TaskKey}
 import java.time.format.DateTimeFormatter
-import java.time.{ Instant, ZoneOffset }
+import java.time.{Instant, ZoneOffset}
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, ExecutionContextExecutor }
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 /**
- * Common base for TaskScheduleDao and TaskStatusDao.
- */
+  * Common base for TaskScheduleDao and TaskStatusDao.
+  */
 protected[dao] trait TaskDaoImpl {
   private val hourFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH").withZone(ZoneOffset.UTC)
 
   /**
-   * Returns a key that uses years, months, days and hours (24-hour-based) from the given time.
-   */
+    * Returns a key that uses years, months, days and hours (24-hour-based) from the given time.
+    */
   private def hourKeyFor(time: Instant) = hourFormat.format(time)
 
   /**
-   * This is hardcoded within implementation and data layout.
-   */
+    * This is hardcoded within implementation and data layout.
+    */
   final val rowTimeBucketDuration = 1.hour
 
   protected implicit val executor: ExecutionContextExecutor = ExecutionContext.Implicits.global
@@ -50,18 +50,18 @@ protected[dao] trait TaskDaoImpl {
   }
 
   /**
-   * Convert time to a string time bucket key used as row key.
-   * @param time
-   * @return
-   */
+    * Convert time to a string time bucket key used as row key.
+    * @param time
+    * @return
+    */
   protected def getTimeBucketKey(time: Instant): TimeBucketKey = hourKeyFor(time)
 
   /**
-   * Get a sequence of time bucket keys for specified time range.
-   * @param from start of the range, inclusive, must be less than `to`
-   * @param to end of the range, exclusive
-   * @return
-   */
+    * Get a sequence of time bucket keys for specified time range.
+    * @param from start of the range, inclusive, must be less than `to`
+    * @param to end of the range, exclusive
+    * @return
+    */
   protected def getTimeBucketKeysExclusive(from: Instant, to: Instant): Seq[TimeBucketKey] = {
     val inclusiveTo = to - 1.millisecond
     for (hour <- from.inHours to inclusiveTo.inHours) yield {
@@ -71,12 +71,16 @@ protected[dao] trait TaskDaoImpl {
   }
 
   /**
-   * Get a sequence of row keys for specified time range.
-   * @param from start of the range, inclusive, must be less than `to`
-   * @param to end of the range, exclusive
-   * @return
-   */
-  protected def getRowKeysExclusive(partitionId: PartitionId, from: Instant, to: Instant): Seq[(PartitionId, TimeBucketKey)] = {
+    * Get a sequence of row keys for specified time range.
+    * @param from start of the range, inclusive, must be less than `to`
+    * @param to end of the range, exclusive
+    * @return
+    */
+  protected def getRowKeysExclusive(
+      partitionId: PartitionId,
+      from: Instant,
+      to: Instant
+    ): Seq[(PartitionId, TimeBucketKey)] = {
     getTimeBucketKeysExclusive(from, to).map(timeBucketKey => (partitionId, timeBucketKey))
   }
 }
