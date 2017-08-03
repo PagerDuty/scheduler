@@ -67,8 +67,8 @@ lazy val common = (project in file("common"))
       "org.slf4j" % "slf4j-api" % "1.7.13",
       "org.slf4j" % "jul-to-slf4j" % "1.7.13",
       "org.apache.kafka" % "kafka-clients" % "0.10.1.1",
-      "org.scalatest" %% "scalatest" % "2.2.6" % "test",
-      "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
+      "org.scalatest" %% "scalatest" % "3.0.1" % "test",
+      "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % "test",
       "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
     )
   )
@@ -98,12 +98,12 @@ lazy val scheduler = (project in file("scheduler"))
     unmanagedSourceDirectories in IntegrationTest +=
       baseDirectory.value / "src/test/scala/com/pagerduty/scheduler/specutil",
     libraryDependencies ++= {
-      val kafkaConsumerVersion = "0.4.1"
+      val kafkaConsumerVersion = "0.6.0"
       Seq(
         "com.pagerduty" %% "metrics-api" % "1.3.0",
         "com.pagerduty" %% "metrics-gauge" % "1.3.0",
-        "com.pagerduty" %% "eris-dao" % "2.0.0",
-        "com.pagerduty" %% "eris-dao" % "2.0.0" % "it" classifier "tests",
+        "com.pagerduty" %% "eris-dao" % "2.1.0",
+        "com.pagerduty" %% "eris-dao" % "2.1.0" % "it" classifier "tests",
         "com.pagerduty" %% "kafka-consumer" % kafkaConsumerVersion,
         "com.pagerduty" %% "kafka-consumer-test-support" % kafkaConsumerVersion exclude ("org.slf4j", "slf4j-simple"),
         "com.typesafe.akka" %% "akka-actor" % "2.3.14",

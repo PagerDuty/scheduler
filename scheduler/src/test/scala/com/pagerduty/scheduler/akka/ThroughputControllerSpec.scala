@@ -6,14 +6,16 @@ import com.pagerduty.scheduler._
 import com.pagerduty.scheduler.datetimehelpers._
 import com.pagerduty.scheduler.specutil.ActorPathFreeSpec
 import java.time.Instant
+
 import org.scalamock.scalatest.PathMockFactory
-import org.scalatest.ShouldMatchers
+import org.scalatest.Matchers
+
 import scala.concurrent.duration._
 
 class ThroughputControllerSpec
     extends ActorPathFreeSpec("ThroughputControllerSpec")
     with PathMockFactory
-    with ShouldMatchers {
+    with Matchers {
   import ThroughputController._
 
   val partitionId = 1
