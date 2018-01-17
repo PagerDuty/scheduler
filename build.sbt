@@ -45,8 +45,8 @@ lazy val bintraySettings = Seq(
 //   - httpAdmin is an optional administrative HTTP interface
 lazy val sharedSettings = Seq(
   organization := "com.pagerduty",
-  scalaVersion := "2.11.7",
-  crossScalaVersions := Seq("2.10.4", "2.11.7"),
+  scalaVersion := "2.11.12",
+  crossScalaVersions := Seq("2.10.4", "2.11.12"),
   testOptions in IntegrationTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
   publishArtifact in Test := true,
   parallelExecution in IntegrationTest := false,
@@ -66,7 +66,7 @@ lazy val common = (project in file("common"))
       "org.json4s" %% "json4s-jackson" % "3.3.0",
       "org.slf4j" % "slf4j-api" % "1.7.13",
       "org.slf4j" % "jul-to-slf4j" % "1.7.13",
-      "org.apache.kafka" % "kafka-clients" % "0.10.1.1",
+      "org.apache.kafka" % "kafka-clients" % "1.0.0",
       "org.scalatest" %% "scalatest" % "3.0.1" % "test",
       "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % "test",
       "ch.qos.logback" % "logback-classic" % "1.1.3" % "test"
@@ -98,7 +98,7 @@ lazy val scheduler = (project in file("scheduler"))
     unmanagedSourceDirectories in IntegrationTest +=
       baseDirectory.value / "src/test/scala/com/pagerduty/scheduler/specutil",
     libraryDependencies ++= {
-      val kafkaConsumerVersion = "0.6.0"
+      val kafkaConsumerVersion = "0.6.1"
       Seq(
         "com.pagerduty" %% "metrics-api" % "1.3.0",
         "com.pagerduty" %% "metrics-gauge" % "1.3.0",

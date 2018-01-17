@@ -6,11 +6,14 @@ import com.pagerduty.scheduler.model.Task
 import java.time.Instant
 import java.util
 import java.util.concurrent.{ExecutionException, TimeUnit, Future => JFuture}
+
+import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.clients.producer._
 import org.apache.kafka.common.{Metric, MetricName, PartitionInfo, TopicPartition}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatest.concurrent.ScalaFutures
+
 import scala.concurrent.duration._
 
 class SchedulerClientSpec extends WordSpecLike with Matchers with ScalaFutures with MockFactory {
@@ -44,6 +47,14 @@ class SchedulerClientSpec extends WordSpecLike with Matchers with ScalaFutures w
     override def send(record: ProducerRecord[String, String]): JFuture[RecordMetadata] = ???
     override def close(): Unit = ???
     override def close(timeout: Long, unit: TimeUnit): Unit = ???
+    override def sendOffsetsToTransaction(
+        offsets: util.Map[TopicPartition, OffsetAndMetadata],
+        consumerGroupId: String
+      ): Unit = ???
+    override def abortTransaction(): Unit = ???
+    override def initTransactions(): Unit = ???
+    override def beginTransaction(): Unit = ???
+    override def commitTransaction(): Unit = ???
   }
 
   trait LocalVals {
@@ -65,7 +76,7 @@ class SchedulerClientSpec extends WordSpecLike with Matchers with ScalaFutures w
       val partitionId = task.partitionId(kafkaNumPartitions)
 
       "successful" should {
-        val result = new RecordMetadata(new TopicPartition(kafkaTopic, 0), 0L, 0L)
+        val result = new RecordMetadata(new TopicPartition(kafkaTopic, 0), 0L, 0L, 0, java.lang.Long.valueOf(0L), 0, 0)
 
         "return a successful future" in new LocalVals {
           stubKafkaProducer.completeCallbackWith(result, null)
