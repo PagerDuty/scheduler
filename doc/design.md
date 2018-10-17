@@ -82,14 +82,14 @@ Kafka consumer interaction is done using a single threaded loop that calls a **p
 
 Partition rebalancing callbacks are invoked as part of the call to the **poll** method. The two callbacks are [**onPartitionsRevoked**](http://kafka.apache.org/090/javadoc/org/apache/kafka/clients/consumer/ConsumerRebalanceListener.html#onPartitionsRevoked(java.util.Collection)) and [**onPartitionsAssigned**](http://kafka.apache.org/090/javadoc/org/apache/kafka/clients/consumer/ConsumerRebalanceListener.html#onPartitionsAssigned(java.util.Collection)). Kafka ensures that **onPartitionsRevoked** has completed on all the nodes, before proceeding to **onPartitionsAssigned**. This behaviour allows us to ensure data integrity during partition rebalancing as follows:
 
-#####Upon receiving onPartitionsRevoked 
+##### Upon receiving onPartitionsRevoked 
   1. Shutdown the actor system to prevent further scheduling
   2. Shut down task ExecutorService to prevent enqueued tasks from starting; since we cannot stop already running tasks, we will allow them to run to completion
   3. Wait a few seconds to allow tasks to complete normally, reducing error rate in logs
   4. Shut down Cassandra connection pool to prevent further writes to Cassandra; this should cause any tasks that are still running to fail when accessing Cassandra
   5. Wait a few seconds to account for clock drift between nodes
 
-#####Upon receiving onPartitionsAssigned
+##### Upon receiving onPartitionsAssigned
 When we receive **onPartitionsAssigned**, we spin up a new actor system configured with new partitions. It may be tempting to keep existing partitions after **onPartitionsRevoked**, in hopes of getting them back with **onPartitionsAssigned**. However, this add non-trivial complexity to the
 system. Instead, we will go with the simples approach, terminating all the running partitions when revoked, and loading a fresh copy when assigned.
 
@@ -119,22 +119,22 @@ See the attached diagram for further details, and the details actor description 
 
 We need to limit task execution to a configurable number of concurrent tasks in order to prevent Cassandra cluster from collapsing due to high number of concurrent reads. The are many strategies to do achieve this, but the simplest one is an ExecutorService with an unbounded waiting queue backed by a fixed-size thread pool (aka **TaskExecutorService**).
 
-###Details On Each Actor:
+### Details On Each Actor:
 
-#####Supervision Strategy
+##### Supervision Strategy
 Because our messages between actors contain tasks, losing messages will cause tasks to be dropped, so the supervision strategies of the actors must be able to reflect that. The default supervision strategy will cause actors to restart upon exception, thereby causing them to drop all their messages. Our supervision strategy must reload the entire system to a clean state to prevent the droppping of tasks. Thus our supervision strategy is to escalate all exceptions up until it reaches the root guardian, at which point the guardian will shutdown the system. We can then reload the tasks from cassandra and return back to a clean state.
 
-#####TopicSupervisor
+##### TopicSupervisor
 * Is the top-level actor and handles supervision of other actors
 * When receiving `ProcessTaskBatch(Map[PartitionId, Seq[Task]])` message, it will spawn a **PartitionSupervisor** for each partition and send a `PersistTasks(Seq[Task])` to each **PartitionSupervisor**. 
 * Once each **TaskPersistence** actor, which is a child of **PartitionSupervisor**, has replied with a `TasksPersisted(PartitionId)`, it will then reply to the system with a `TaskBatchProcessed`
  
-#####PartitionSupervisor 
+##### PartitionSupervisor 
 * is the actor which manages all of the actors in a given partition. 
 * On creation, it will spawn the **TaskCompletionTracker**, **ThroughputController**, **PartitionExecutor**, **PartitionScheduler** and **TaskPersistence** actors.
 * Upon receiving a `PersistTasks(Seq[Task])` from the **PersistRequestActor**, it will forward the message to the **TaskPersistence** actor.
 
-#####TaskPersistence 
+##### TaskPersistence 
 * handles reads and writes to **ScheduledColumnFamily** in Cassandra for a given partition
 * Maintains `readCheckpoint`, which is the last task key it has read.
 * When receiving `PersistTasks(Seq[Task])`, the tasks will be written to the **ScheduledColumnFamily** in Cassandra.
@@ -142,28 +142,28 @@ Because our messages between actors contain tasks, losing messages will cause ta
 * When receiving `LoadTasks(upperBound: Time, limit: Int)` message, it will load the tasks from Cassandra over the time period with a maximum amount being the limit that was provided
 * When tasks are loaded from Cassandra, the actor will send `TasksLoaded(readCheckpointTime)` to the **ThroughputController**, and finally advance the `readCheckpoint`. These tasks are then forwarded to the **PartitionScheduler** through the message `ScheduleTasks(Seq[Task])`.
 
-#####PartitionScheduler
+##### PartitionScheduler
 * Upon receiving `ScheduledTasks(Seq[Tasks])`, the actor will merge this list with the list of tasks already being held in memory and hold them.
 * Tasks which are not yet due are held in memory until they are due. 
 * Due tasks are dispatched to the **PartitionExecutor** via `ExecutePartitionTask(Task)`
 * Upon receiving a `FetchInProgressTaskCount`  message from **ThroughputController**, it replies back with the number of pending tasks in its memory via `InProgressTaskCountFetched(Int)`
 
-#####ThroughputController
+##### ThroughputController
 * Controls loading of the schedule from the database. If there are not a sufficient number of tasks in flight, the **ThroughputController** will send `LoadTasks` to the **TaskPersistence** actor to load more tasks from Cassandra
 * Sends `FetchInProgressTaskCount` to each actor which can have in-progress tasks and receives an `InProgressTaskCountFetched(Int)` which contains the number of tasks in progress by that actor.
 
-#####PartitionExecutor
+##### PartitionExecutor
 * Manages the execution of tasks for a partition. It spawns an **OrderingExecutor** for each unique **orderingId**
 * It forwards tasks received from the **PartitionScheduler** through the message `ExecutePartitionTask(Task)` to the **OrderingExecutor** with the relevant **orderingId**
 * Upon receiving a `FetchInProgressTaskCount` from the **ThroughputController**, it replies back with the number of in-flight tasks via`InProgressTaskCountFetched(Int)`
 
-#####OrderingExecutor
+##### OrderingExecutor
 * Manages a task queue for a given **orderingId**
 * Spawns a new **TaskExecutor** for each task, and waits for it to complete before attempting to create a **TaskExecutor** for the next task in queue
 * Receives a task to execute from the **PartitionExecutor** through `ExecuteEntityTask(Task)`.
 * Receivies a `TaskExecuted(Taskkey)` from a **TaskExecutor** when the executor has finished running the task.
 
-#####TaskExecutor
+##### TaskExecutor
 * It is a short-lived actor that manages the execution of a task and reports it as either complete or incomplete
 * Upon initialization, it checks with the **TaskCompletionTracker** to see if the task is already marked as complete by sending the message `FetchTaskCompletion(TaskKey)`
 * It receives a `TaskCompletionFetched(TaskKey, Boolean)` from the **TaskCompletionTracker**. If the task has already been marked as completed, it will simply remove the task from the **ScheduledColumnFamily** by sending the message `RemoveTask(TaskKey)`. The **TaskExecutor** will also reply back to the **OrderingExecutor** with a `TaskExecuted(TaskKey)` and will stop itself.
@@ -171,7 +171,7 @@ Because our messages between actors contain tasks, losing messages will cause ta
 * Upon successful completion of a task, it will send a `MarkTaskComplete(TaskKey)` to the **TaskCompletionTracker**, remove the task from the **ScheduledColumnFamily**, report back to the **OrderingExecutor** with a `TaskExecuted(TaskKey)` and stop itself.
 * Upon failure, the task will be retried after a user-specified retry period and will continue to be retried indefinitely until success.
 
-#####TaskCompletionTracker
+##### TaskCompletionTracker
 * Manages and tracks whether or not the tasks for a given partition have been completed or not.
 * When it receives a `FetchTaskCompletion(TaskKey)`, the actor checks Cassandra to see whether or not the task is complete. If the query is successful, it replies back to the sender with a `TaskCompletionFetched(TaskKey, Boolean)`. If an error occurs while querying Cassandra, it replies back to the sender with a `TaskCompletionNotFetched(TaskKey, Throwable)`.
 * Upon receiving a `MarkTaskComplete(TaskKey)`, it will store the task's completion status in Cassandra and reply back to the sender with either a `TaskMarkedComplete(TaskKey)` if successful or a `TaskNotMarkedComplete(TaskKey, Throwable)` upon error or failure.
