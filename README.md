@@ -1,5 +1,4 @@
-# Scheduler [![Build Status](https://travis-ci.org/PagerDuty/scheduler.svg?branch=master)](https://travis-ci.org/PagerDuty/scheduler/builds)
-
+# Scheduler [![CircleCI](https://circleci.com/gh/PagerDuty/scheduler.svg?style=svg)](https://circleci.com/gh/PagerDuty/scheduler)
 ## Introduction
 
 This library schedules arbitrary Scala code (tasks) to run at an arbitrary time. It tries to do this despite changing infrastructure, and it tries to maintain some sense of task ordering.
