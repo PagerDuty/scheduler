@@ -58,14 +58,14 @@ commands:
       - scala/restore_sbt_cache
       - run:
           name: Check formatting with Scalafmt
-          command: cat /dev/null | SBT_CREDENTIALS=~/.sbt/credentials sbt ++$SCALA_VERSION -Dsbt.override.build.repos=true scalafmt::test test:scalafmt::test
+          command: SBT_CREDENTIALS=~/.sbt/credentials sbt ++$SCALA_VERSION -Dsbt.override.build.repos=true scalafmt::test test:scalafmt::test
       - run:
           name: Compile
-          command: cat /dev/null | SBT_CREDENTIALS=~/.sbt/credentials sbt ++$SCALA_VERSION -Dsbt.override.build.repos=true test:compile
+          command: SBT_CREDENTIALS=~/.sbt/credentials sbt ++$SCALA_VERSION -Dsbt.override.build.repos=true test:compile
       - scala/save_sbt_cache
       - run:
           name: Run unit and integration tests
-          command: cat /dev/null | SBT_CREDENTIALS=~/.sbt/credentials sbt ++$SCALA_VERSION -Dsbt.override.build.repos=true test it:test
+          command: SBT_CREDENTIALS=~/.sbt/credentials sbt ++$SCALA_VERSION -Dsbt.override.build.repos=true test it:test
 
   publish:
     steps:
