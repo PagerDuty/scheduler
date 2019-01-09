@@ -1,0 +1,126 @@
+version: 2.1
+
+orbs:
+  scala:
+    executors:
+      scala_executor:
+        parameters:
+          image:
+            type: string
+            default: circleci/openjdk:8-jdk
+          dir:
+            type: string
+            default: ~/repo
+          scala_version:
+            type: string
+            default: 2.11.12
+        docker:
+          - image: << parameters.image >>
+        working_directory: << parameters.dir >>
+        environment:
+          SCALA_VERSION: << parameters.scala_version >>
+
+    commands:
+      restore_sbt_cache:
+        steps:
+          - restore_cache:
+              keys:
+                - v1-dependencies-{{ checksum "build.sbt" }}-{{ checksum "project/plugins.sbt" }}-{{ checksum ".circleci/config.yml" }}
+                # Fallback to using the latest cache if no exact match is found
+                - v1-dependencies-
+      setup_sbt:
+        steps:
+          - run:
+              name: Setup SBT
+              command: |
+                mkdir -p ~/.sbt/0.13/plugins/
+                cp .circleci/{repositories,credentials} ~/.sbt
+                cp .circleci/credentials.sbt ~/.sbt/0.13/plugins/credentials.sbt
+                cp .circleci/publish.sbt ~/.sbt/0.13/publish.sbt 2>/dev/null || true
+                sed -i "s|%{user}|$ARTIFACTORY_USER|" ~/.sbt/credentials
+                sed -i "s|%{password}|$ARTIFACTORY_API_KEY|" ~/.sbt/credentials
+      save_sbt_cache:
+        steps:
+          - save_cache:
+              paths:
+                - ~/.m2
+                - ~/.ivy2/cache
+                - target/resolution-cache
+                - target/streams
+                - project/target/resolution-cache
+                - project/target/streams
+              key: v1-dependencies-{{ checksum "build.sbt" }}-{{ checksum "project/plugins.sbt" }}-{{ checksum ".circleci/config.yml" }}
+
+commands:
+  test:
+    steps:
+      - checkout
+      - scala/restore_sbt_cache
+      - run:
+          name: Check formatting with Scalafmt
+          command: SBT_CREDENTIALS=~/.sbt/credentials sbt ++$SCALA_VERSION -Dsbt.override.build.repos=true scalafmt::test test:scalafmt::test
+      - run:
+          name: Compile
+          command: SBT_CREDENTIALS=~/.sbt/credentials sbt ++$SCALA_VERSION -Dsbt.override.build.repos=true test:compile
+      - scala/save_sbt_cache
+      - run:
+          name: Run unit and integration tests
+          command: SBT_CREDENTIALS=~/.sbt/credentials sbt ++$SCALA_VERSION -Dsbt.override.build.repos=true test it:test
+
+  publish:
+    steps:
+      - checkout
+      - scala/restore_sbt_cache
+      - run:
+          name: Publish Artifact
+          command: .circleci/release.sh
+
+jobs:
+  test_210_cass2:
+    docker:
+      - image: circleci/openjdk:8-jdk
+        environment:
+          SCALA_VERSION: 2.10.4
+      - image: zookeeper:3.4.12
+      - image: wurstmeister/kafka:1.0.1
+      - image: cassandra:2.2.7
+        environment:
+          CASSANDRA_START_RPC: true
+    steps:
+      - test
+  test_211_cass2:
+    docker:
+      - image: circleci/openjdk:8-jdk
+        environment:
+          SCALA_VERSION: 2.11.12
+      - image: zookeeper:3.4.12
+      - image: wurstmeister/kafka:1.0.1
+      - image: cassandra:2.2.7
+        environment:
+          CASSANDRA_START_RPC: true
+    steps:
+      - test
+
+  publish:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - publish
+
+
+workflows:
+  test_and_publish:
+    jobs:
+      - test_210_cass2:
+          context: PagerDuty
+      - test_211_cass2:
+          context: PagerDuty
+
+      - publish:
+          requires:
+            - test_210_cass2
+            - test_211_cass2
+          context: PagerDuty
+          filters:
+            branches:
+              only: master
