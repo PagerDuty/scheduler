@@ -3,6 +3,7 @@ package com.pagerduty.scheduler
 import java.util.Properties
 
 import com.typesafe.config._
+import scala.collection.JavaConverters._
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -41,7 +42,10 @@ object SchedulerSettings {
   }
   private def makeProperties(configObject: ConfigObject): Properties = {
     val result = new Properties()
-    result.putAll(configObject.unwrapped())
+    configObject.unwrapped().asScala.foreach {
+      case (k, v) =>
+        result.put(k, v)
+    }
     result
   }
 }

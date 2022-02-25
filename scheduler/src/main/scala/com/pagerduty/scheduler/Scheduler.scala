@@ -21,6 +21,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
+import scala.collection.JavaConverters._
 
 /**
   * Abstract class which contains the base functions required for the scheduler
@@ -82,14 +83,16 @@ class SchedulerImpl(
     val kafkaConsumerProps = {
       // Start with the optional extra properties, so that
       // makeProps has a chance to have the final say.
-      val props = schedulerSettings.kafkaProperties
-      props.putAll(
-        SimpleKafkaConsumer.makeProps(
-          schedulerSettings.kafkaBootstrapBroker,
-          kafkaConsumerGroup,
-          schedulerSettings.maxPollRecords
-        )
+      val props: java.util.Properties = schedulerSettings.kafkaProperties.clone().asInstanceOf[java.util.Properties]
+      val moreProps = SimpleKafkaConsumer.makeProps(
+        schedulerSettings.kafkaBootstrapBroker,
+        kafkaConsumerGroup,
+        schedulerSettings.maxPollRecords
       )
+      moreProps.asScala.foreach {
+        case (k, v) =>
+          props.put(k, v)
+      }
       props
     }
     new SchedulerKafkaConsumer(
