@@ -1,15 +1,5 @@
 #!/usr/bin/env bash
 
-echo "Setting up Bintray credentials..."
-mkdir $HOME/.bintray/
-BINTRAY_CRED_FILE=$HOME/.bintray/.credentials
-cat <<EOF >$BINTRAY_CRED_FILE
-realm = Bintray API Realm
-host = api.bintray.com
-user = $BINTRAY_USER
-password = $BINTRAY_API_KEY
-EOF
-
 echo "Configuring Git..."
 git config --global user.email "builds@circleci.com"
 git config --global user.name "Circle CI"
